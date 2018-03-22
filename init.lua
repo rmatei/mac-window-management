@@ -1,79 +1,107 @@
--- Load screen dimensions
-screens = hs.screen.allScreens()
--- screen = screens[1]
--- screenFrame = screen:frame()
+-- Set mode, settings & shortcuts based on current screen config
+function loadCurrentScreenSettings()
+  screens = hs.screen.allScreens()
+  if #screens == 1 then
+    -- MacBook Pro Retina is 2560x1600
+    mode = 'laptop'
+    mainScreen = screens[1]
+    buffer = 0
+  else
+    -- Ultrawide 30" is 3440x1440
+    mainScreen = screens[1]
+    sideScreen = screens[2]
+    mode = 'external'
+    buffer = 15
+  end
 
--- Set base mode and dimensions
-if #screens == 1 then
-  -- MacBook Pro Retina is 2560x1600
-  mode = 'laptop'
-  mainScreen = screens[1]
-  buffer = 0
-else
-  -- Ultrawide 30" is 3440x1440
-  mainScreen = screens[1]
-  sideScreen = screens[2]
-  mode = 'external'
-  buffer = 15
+  -- Settings
+  maximized = {x1=0, y1=0, w=1, h=1}
+  left50 = {x1=0, y1=0, w=1/2, h=1}
+  right50 = {x1=1/2, y1=0, w=1/2, h=1}
+  left33 = {x1=0, y1=0, w=1/3, h=1}
+  mid33 = {x1=1/3, y1=0, w=1/3, h=1}
+  right33 = {x1=2/3, y1=0, w=1/3, h=1}
+
+  -- Set different settings for single screen vs. 2
+  settings = {}
+  if mode == "laptop" then
+    -- Laptop only
+    settings["default"] = {mainScreen, maximized}
+    settings["Safari"] = {mainScreen, left50}
+    settings["Atom"] = {mainScreen, maximized}
+  else
+    -- External monitor
+    settings["default"] = {mainScreen, mid33}
+    settings["Google Chrome"] = {mainScreen, right33}
+    settings["OmniFocus"] = {sideScreen, maximized}
+    settings["iTunes"] = {sideScreen, maximized}
+
+    -- Dev stuff
+    -- settings["Atom"] = {mainScreen, left33}
+    settings["Hammerspoon"] = {mainScreen, {x1=0, y1=0, w=1/3, h=1/3}}
+    settings["Terminal"] = {mainScreen, {x1=0, y1=2/3, w=1/3, h=1/3}}
+    settings["Activity Monitor"] = {mainScreen, {x1=0, y1=1/3, w=1/3, h=1/3}}
+    settings["Safari"] = {mainScreen, left33}
+  end
+
+  -- Shortcuts
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
+    -- Apply settings to all windows on screen
+    processAllWindows()
+  end)
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
+    -- Apply to just this window
+    processWindow(hs.window.frontmostWindow())
+  end)
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
+    hideAllWindows()
+  end)
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "q", function()
+    quitAll()
+  end)
+
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
+    resizeWindow(hs.window.frontmostWindow(), {mainScreen, maximized})
+  end)
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
+    centerWindow(hs.window.frontmostWindow())
+  end)
+
+  if mode == 'laptop' then
+    -- Halves
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, left50})
+    end)
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, right50})
+    end)
+  else
+    -- Thirds
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "1", function()
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, left33})
+    end)
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "2", function()
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, mid33})
+    end)
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "3", function()
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, right33})
+    end)
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
+      resizeWindow(hs.window.frontmostWindow(), {sideScreen, maximized})
+    end)
+  end
 end
+loadCurrentScreenSettings()
 
--- Settings
-maximized = {x1=0, y1=0, w=1, h=1}
-left50 = {x1=0, y1=0, w=1/2, h=1}
-right50 = {x1=1/2, y1=0, w=1/2, h=1}
-left33 = {x1=0, y1=0, w=1/3, h=1}
-mid33 = {x1=1/3, y1=0, w=1/3, h=1}
-right33 = {x1=2/3, y1=0, w=1/3, h=1}
 
--- Set different settings for single screen vs. 2
-settings = {}
-if mode == "laptop" then
-  -- Laptop only
-  settings["default"] = {mainScreen, maximized}
-  settings["Safari"] = {mainScreen, left50}
-  settings["Atom"] = {mainScreen, maximized}
-else
-  -- External monitor
-  settings["default"] = {mainScreen, mid33}
-  settings["Atom"] = {mainScreen, left33}
-  settings["Google Chrome"] = {mainScreen, right33}
-  settings["OmniFocus"] = {sideScreen, maximized}
-  settings["iTunes"] = {sideScreen, maximized}
-  -- settings["Terminal"] = {mainScreen, {x1=2.5/3, y1=0, w=1/3, h=1/3}}
+
+-- WINDOW PROCESSING
+
+function processAllWindows()
+  for i, window in pairs(hs.window.allWindows()) do
+    processWindow(window)
+  end
 end
-
--- Shortcuts
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
-  resizeWindow(hs.window.frontmostWindow(), {mainScreen, left50})
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
-  resizeWindow(hs.window.frontmostWindow(), {mainScreen, right50})
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
-  resizeWindow(hs.window.frontmostWindow(), {mainScreen, maximized})
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
-  centerWindow(hs.window.frontmostWindow())
-end)
-
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "1", function()
-  resizeWindow(hs.window.frontmostWindow(), {mainScreen, left33})
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "2", function()
-  resizeWindow(hs.window.frontmostWindow(), {mainScreen, mid33})
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "3", function()
-  resizeWindow(hs.window.frontmostWindow(), {mainScreen, right33})
-end)
-
-
-
-
-
--- Test code
--- local log = hs.logger.new("Window mover", "error")
--- log:d("Hello world")
--- hs.screen:currentMode()
 
 function processWindow(window)
   appSettings = settings[window:application():name()]
@@ -107,8 +135,6 @@ end
 function resizeWindow(window, appSettings)
   hs.alert.show("Resizing")
   window:setFrame(settingsToFrame(appSettings))
-  -- window:setTopLeft(appSettings.x, appSettings.y)
-  -- window:setSize(appSettings.w, appSettings.h)
 end
 
 -- example args: {screen, {x1=0, y1=0, w=1/2, h=1}}
@@ -116,10 +142,10 @@ function settingsToFrame (args)
   screenFrame = args[1]:frame()
   screenWidth = screenFrame.x2 - screenFrame.x1
   screenHeight = screenFrame.y2 - screenFrame.y1
-  x1 = screenFrame.x1 + args[2].x1 * screenWidth -- + buffer
-  y1 = screenFrame.y1 + args[2].y1 * screenHeight -- + buffer
-  w = args[2].w * screenWidth -- - 2*buffer
-  h = args[2].h * screenHeight -- - 2*buffer
+  x1 = screenFrame.x1 + args[2].x1 * screenWidth
+  y1 = screenFrame.y1 + args[2].y1 * screenHeight
+  w = args[2].w * screenWidth
+  h = args[2].h * screenHeight
 
   if args[2].x1 == 0 then
     -- If starting on left edge add full buffer
@@ -154,6 +180,29 @@ function settingsToFrame (args)
 end
 
 
+
+-- OTHER HOUSEKEEPING COMMANDS
+
+function quitAll()
+  for i, window in pairs(hs.window.allWindows()) do
+  if (window:application():name() ~= "Hammerspoon") then
+      window:application():kill()
+    end
+  end
+end
+
+function hideAllWindows()
+  for i, window in pairs(hs.window.allWindows()) do
+    if (window:application():name() ~= "OmniFocus") then
+      window:application():hide()
+    end
+  end
+end
+
+
+
+-- MANAGE / WATCH / RELOAD
+
 -- Application watcher to apply this
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.launched) then
@@ -168,8 +217,8 @@ appWatcher:start()
 
 -- Also screen watcher to apply this
 function screenWatcher()
-  hs.reload()
-  processWindow(hs.window.frontmostWindow())
+  loadCurrentScreenSettings()
+  processAllWindows()
 end
 scrWatcher = hs.screen.watcher.new(screenWatcher)
 scrWatcher:start()
@@ -191,6 +240,9 @@ hs.alert.show("Config loaded")
 -- hs.loadSpoon("ReloadConfiguration") -- alternate that doesn't alert
 -- spoon.ReloadConfiguration:start()
 
+
+
+-- HELPERS
 
 -- Table pretty printer
 function dump(o)
