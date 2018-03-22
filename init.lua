@@ -25,26 +25,6 @@ left33 = {x1=0, y1=0, w=1/3, h=1}
 mid33 = {x1=1/3, y1=0, w=1/3, h=1}
 right33 = {x1=2/3, y1=0, w=1/3, h=1}
 
--- Shared computations
--- function widthForPanes(panes)
---   return (screenWidth - buffer) / panes
--- end
-
--- x1 = screenFrame.x1 + buffer
--- y1 = screenFrame.y1 + buffer
--- x2 = screenFrame.x2 - buffer
--- y2 = screenFrame.y2 - buffer
--- screenWidth = x2-x1
--- screenHeight = y2-y1
--- maximized = hs.geometry.rect(x1, y1, screenWidth, screenHeight)
---
--- left50 = hs.geometry.rect({x=x1, y=y1, w=widthForPanes(2), h=screenHeight})
--- right50 = hs.geometry.rect(x1+widthForPanes(2)+buffer, y1, widthForPanes(2), screenHeight)
---
--- left33 = hs.geometry.rect({x=x1, y=y1, w=widthForPanes(3), h=screenHeight})
--- mid33 = hs.geometry.rect(x1+(widthForPanes(3)+buffer)*1, y1, widthForPanes(3), screenHeight)
--- right33 = hs.geometry.rect(x1+(widthForPanes(3)+buffer)*2, y1, widthForPanes(3), screenHeight)
-
 -- Set different settings for single screen vs. 2
 settings = {}
 if mode == "laptop" then
@@ -58,6 +38,8 @@ else
   settings["Atom"] = {mainScreen, left33}
   settings["Google Chrome"] = {mainScreen, right33}
   settings["OmniFocus"] = {sideScreen, maximized}
+  settings["iTunes"] = {sideScreen, maximized}
+  -- settings["Terminal"] = {mainScreen, {x1=2.5/3, y1=0, w=1/3, h=1/3}}
 end
 
 -- Shortcuts
@@ -93,8 +75,7 @@ end)
 -- log:d("Hello world")
 -- hs.screen:currentMode()
 
-function processWindow()
-  window = hs.window.frontmostWindow()
+function processWindow(window)
   appSettings = settings[window:application():name()]
   if (appSettings == nil) then
     defaultBehavior(window)
@@ -116,6 +97,7 @@ function centerWindow(window)
   windowFrame = window:frame()
   currentWidth = windowFrame.x2 - windowFrame.x1
   currentHeight = windowFrame.y2 - windowFrame.y1
+  screenFrame = screens[1]:frame()
   hOffset = ((screenFrame.x2 - screenFrame.x1) - currentWidth) / 2
   vOffset = ((screenFrame.y2 - screenFrame.y1) - currentHeight) / 2
   -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
@@ -175,10 +157,10 @@ end
 -- Application watcher to apply this
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.launched) then
-    processWindow()
+    processWindow(hs.window.frontmostWindow())
   end
   -- if (eventType == hs.application.watcher.activated) then
-  --   processWindow()
+  --   processWindow(hs.window.frontmostWindow())
   -- end
 end
 appWatcher = hs.application.watcher.new(applicationWatcher)
@@ -186,7 +168,8 @@ appWatcher:start()
 
 -- Also screen watcher to apply this
 function screenWatcher()
-  processWindow()
+  hs.reload()
+  processWindow(hs.window.frontmostWindow())
 end
 scrWatcher = hs.screen.watcher.new(screenWatcher)
 scrWatcher:start()
