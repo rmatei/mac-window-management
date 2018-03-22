@@ -203,10 +203,23 @@ end
 
 -- MANAGE / WATCH / RELOAD
 
--- Application watcher to apply this
+-- When new app is launched
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.launched) then
-    processWindow(hs.window.frontmostWindow())
+    hs.alert.show(appObject:path())
+
+    -- Workaround for localized apps - windows belong to Chrome
+    if string.find(appObject:path(), "Chrome Apps") then
+      appObject = hs.application.find("Chrome")
+    end
+    -- hs.alert.show(appObject:path())
+
+    sleep(0.25) -- Needed to catch it sometimes
+    hs.alert.show(#appObject:allWindows())
+    windows = appObject:allWindows()
+    for i, window in pairs(windows) do
+      processWindow(window)
+    end
   end
   -- if (eventType == hs.application.watcher.activated) then
   --   processWindow(hs.window.frontmostWindow())
@@ -215,7 +228,7 @@ end
 appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
 
--- Also screen watcher to apply this
+-- When screens are switched
 function screenWatcher()
   loadCurrentScreenSettings()
   processAllWindows()
@@ -256,4 +269,8 @@ function dump(o)
    else
       return tostring(o)
    end
+end
+
+function sleep(n)
+  os.execute("sleep " .. tonumber(n))
 end
