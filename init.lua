@@ -28,16 +28,26 @@ function loadCurrentScreenSettings()
     -- Laptop only
     settings["default"] = {mainScreen, maximized}
     settings["Safari"] = {mainScreen, left50}
-    settings["Atom"] = {mainScreen, maximized}
+    -- settings["Atom"] = {mainScreen, maximized}
   else
     -- External monitor
+
+    -- Main work apps
     settings["default"] = {mainScreen, mid33}
+    settings["Atom"] = {mainScreen, mid33}
+    settings["Google Inbox"] = {mainScreen, mid33}
+
+    -- Companion apps
+    settings["Google Calendar"] = {mainScreen, left33}
+
+    -- Helper / reference apps
     settings["Google Chrome"] = {mainScreen, right33}
+
+    -- Non-task related companions
     settings["OmniFocus"] = {sideScreen, maximized}
     settings["iTunes"] = {sideScreen, maximized}
 
-    -- Dev stuff
-    -- settings["Atom"] = {mainScreen, left33}
+    -- Dev companions
     settings["Hammerspoon"] = {mainScreen, {x1=0, y1=0, w=1/3, h=1/3}}
     settings["Terminal"] = {mainScreen, {x1=0, y1=2/3, w=1/3, h=1/3}}
     settings["Activity Monitor"] = {mainScreen, {x1=0, y1=1/3, w=1/3, h=1/3}}
@@ -104,11 +114,13 @@ function processAllWindows()
 end
 
 function processWindow(window)
-  appSettings = settings[window:application():name()]
-  if (appSettings == nil) then
-    defaultBehavior(window)
+  if (settings[window:title()] ~= nil) then
+    -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
+    resizeWindow(window, settings[window:title()])
+  elseif (settings[window:application():name()] ~= nil) then
+    resizeWindow(window, settings[window:application():name()])
   else
-    resizeWindow(window, appSettings)
+    defaultBehavior(window)
   end
 end
 
@@ -206,16 +218,12 @@ end
 -- When new app is launched
 function applicationWatcher(appName, eventType, appObject)
   if (eventType == hs.application.watcher.launched) then
-    hs.alert.show(appObject:path())
-
     -- Workaround for localized apps - windows belong to Chrome
     if string.find(appObject:path(), "Chrome Apps") then
       appObject = hs.application.find("Chrome")
     end
-    -- hs.alert.show(appObject:path())
 
     sleep(0.25) -- Needed to catch it sometimes
-    hs.alert.show(#appObject:allWindows())
     windows = appObject:allWindows()
     for i, window in pairs(windows) do
       processWindow(window)
