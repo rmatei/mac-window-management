@@ -18,9 +18,9 @@ function loadCurrentScreenSettings()
   maximized = {x1=0, y1=0, w=1, h=1}
   left50 = {x1=0, y1=0, w=1/2, h=1}
   right50 = {x1=1/2, y1=0, w=1/2, h=1}
-  left33 = {x1=0, y1=0, w=1/3, h=1}
-  mid33 = {x1=1/3, y1=0, w=1/3, h=1}
-  right33 = {x1=2/3, y1=0, w=1/3, h=1}
+  left33 = {x1=0, y1=0, w=0.3, h=1}
+  mid33 = {x1=0.3, y1=0, w=0.4, h=1}
+  right33 = {x1=0.7, y1=0, w=0.3, h=1}
 
   -- Set different settings for single screen vs. 2
   settings = {}
@@ -39,18 +39,22 @@ function loadCurrentScreenSettings()
 
     -- Companion apps
     settings["Google Calendar"] = {mainScreen, left33}
+    -- settings["OmniFocus"] = {mainScreen, {x1=0, y1=0, w=1/3, h=3/4}}
+    -- settings["Terminal"] = {mainScreen, {x1=0, y1=3/4, w=1/3, h=1/4}}
 
     -- Helper / reference apps
     settings["Google Chrome"] = {mainScreen, right33}
 
     -- Non-task related companions
-    settings["OmniFocus"] = {sideScreen, maximized}
+    -- settings["OmniFocus"] = {sideScreen, maximized}
+    settings["OmniFocus"] = {sideScreen, {x1=0, y1=0, w=1, h=0.8}}
+    settings["Terminal"] = {sideScreen, {x1=0, y1=0.8, w=1, h=0.2}}
+
     settings["iTunes"] = {sideScreen, maximized}
 
     -- Dev companions
-    settings["Hammerspoon"] = {mainScreen, {x1=0, y1=0, w=1/3, h=1/3}}
-    settings["Terminal"] = {mainScreen, {x1=0, y1=2/3, w=1/3, h=1/3}}
-    settings["Activity Monitor"] = {mainScreen, {x1=0, y1=1/3, w=1/3, h=1/3}}
+    settings["Hammerspoon"] = {mainScreen, {x1=0, y1=0, w=0.3, h=0.5}}
+    settings["Activity Monitor"] = {mainScreen, {x1=0, y1=0.5, w=0.3, h=0.5}}
     settings["Safari"] = {mainScreen, left33}
   end
 
@@ -197,10 +201,14 @@ end
 
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
-  if (window:application():name() ~= "Hammerspoon") then
+    app = window:application():name()
+    if (app ~= "Hammerspoon" and app ~= "iTunes" and app ~= "OmniFocus") then
       window:application():kill()
     end
   end
+
+  sleep(0.5)
+  hs.application.find("Chrome"):kill9()
 end
 
 function hideAllWindows()
