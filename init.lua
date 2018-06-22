@@ -5,68 +5,81 @@ function loadCurrentScreenSettings()
     -- MacBook Pro Retina is 2560x1600
     mode = 'laptop'
     mainScreen = screens[1]
+    laptopScreen = mainScreen
     buffer = 0
   else
     -- Ultrawide 30" is 3440x1440
     mainScreen = screens[1]
     sideScreen = screens[2]
+    laptopScreen = sideScreen
     mode = 'external'
     buffer = 15
   end
 
   -- Settings
-  maximized = {x1=0, y1=0, w=1, h=1}
-  left50 = {x1=0, y1=0, w=1/2, h=1}
-  right50 = {x1=1/2, y1=0, w=1/2, h=1}
-  left33 = {x1=0, y1=0, w=0.3, h=1}
-  mid33 = {x1=0.3, y1=0, w=0.4, h=1}
-  right33 = {x1=0.7, y1=0, w=0.3, h=1}
+
+  left30 = {x1=0, w=0.3}
+  mid40 = {x1=0.3, w=0.4}
+  right30 = {x1=0.7, w=0.3}
+  top50 = {y1=0, h=0.5}
+  bottom50 = {y1=0.5, h=0.5}
+
+  left50 = {x1=0, w=0.5}
+  right50 = {x1=0.5, w=0.5}
+
+  fullw = {x1=0, w=1}
+  fullh = {y1=0, h=1}
 
   -- Set different settings for single screen vs. 2
   settings = {}
   if mode == "laptop" then
     -- Laptop only
-    settings["default"] = {mainScreen, maximized}
-    settings["Safari"] = {mainScreen, left50}
+    settings["default"] = {mainScreen, merge(fullw, fullh)}
+    settings["Safari"] = {mainScreen, merge(fullw, fullh)}
     -- settings["Atom"] = {mainScreen, maximized}
+    settings["Terminal"] = {laptopScreen, merge(fullw, bottom50)}
   else
     -- External monitor
 
     -- Main work apps
-    settings["default"] = {mainScreen, mid33}
-    settings["Atom"] = {mainScreen, mid33}
-    settings["Google Inbox"] = {mainScreen, mid33}
+    settings["default"] = {mainScreen, merge(mid40, fullh)}
+    settings["Atom"] = {mainScreen, merge(mid40, fullh)}
+    settings["Google Inbox"] = {mainScreen, merge(mid40, fullh)}
 
     -- Companion apps
-    settings["Google Calendar"] = {mainScreen, left33}
+    settings["Google Calendar"] = {mainScreen, merge(left30, fullh)}
     -- settings["OmniFocus"] = {mainScreen, {x1=0, y1=0, w=1/3, h=3/4}}
     -- settings["Terminal"] = {mainScreen, {x1=0, y1=3/4, w=1/3, h=1/4}}
 
     -- Helper / reference apps
-    settings["Google Chrome"] = {mainScreen, right33}
+    settings["Google Chrome"] = {mainScreen, merge(right30, fullh)}
 
     -- Non-task related companions
     -- settings["OmniFocus"] = {sideScreen, maximized}
-    settings["OmniFocus"] = {sideScreen, {x1=0, y1=0, w=1, h=0.8}}
-    settings["Terminal"] = {sideScreen, {x1=0, y1=0.8, w=1, h=0.2}}
 
-    settings["iTunes"] = {sideScreen, maximized}
+    settings["iTunes"] = {sideScreen, merge(fullw, fullh)}
 
     -- Dev companions
-    settings["Hammerspoon"] = {mainScreen, {x1=0, y1=0, w=0.3, h=0.5}}
-    settings["Activity Monitor"] = {mainScreen, {x1=0, y1=0.5, w=0.3, h=0.5}}
-    settings["Safari"] = {mainScreen, left33}
+    settings["Hammerspoon"] = {mainScreen, merge(left30, top50)}
+    -- settings["Contacts"] = {mainScreen, {x1=0, y1=0, w=0.3, h=0.5}}
+    settings["Contacts"] = {mainScreen, merge(left30, bottom50)}
+    -- settings["Terminal"] = {mainScreen, merge(left30, bottom50)}
+    settings["Terminal"] = {mainScreen, {x1=0, w=0.3, y1=0.5, h=0.5}}
+
+    settings["Activity Monitor"] = {mainScreen, merge(left30, top50)}
+    settings["Safari"] = {mainScreen, merge(right30, fullh)}
   end
+  settings["OmniFocus"] = {laptopScreen, merge(fullw, fullh)}
 
   -- Shortcuts
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
-    -- Apply settings to all windows on screen
-    processAllWindows()
-  end)
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
-    -- Apply to just this window
-    processWindow(hs.window.frontmostWindow())
-  end)
+  -- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
+  --   -- Apply settings to all windows on screen
+  --   processAllWindows()
+  -- end)
+  -- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
+  --   -- Apply to just this window
+  --   processWindow(hs.window.frontmostWindow())
+  -- end)
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
     hideAllWindows()
   end)
@@ -75,37 +88,80 @@ function loadCurrentScreenSettings()
   end)
 
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
-    resizeWindow(hs.window.frontmostWindow(), {mainScreen, maximized})
+    resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(fullw, fullh)})
   end)
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
     centerWindow(hs.window.frontmostWindow())
   end)
 
-  if mode == 'laptop' then
+  -- if mode == 'laptop' then
     -- Halves
     hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, left50})
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(left50, fullh)})
     end)
     hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, right50})
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(right50, fullh)})
     end)
-  else
+  -- else
     -- Thirds
     hs.hotkey.bind({"cmd", "alt", "ctrl"}, "1", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, left33})
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(left30, fullh)})
     end)
     hs.hotkey.bind({"cmd", "alt", "ctrl"}, "2", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, mid33})
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(mid40, fullh)})
     end)
     hs.hotkey.bind({"cmd", "alt", "ctrl"}, "3", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, right33})
+      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(right30, fullh)})
     end)
     hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
-      resizeWindow(hs.window.frontmostWindow(), {sideScreen, maximized})
+      resizeWindow(hs.window.frontmostWindow(), {sideScreen, merge(fullw, fullh)})
     end)
+  -- end
+end
+function merge(t1, t2)
+  for k, v in pairs(t2) do
+    if (type(v) == "table") and (type(t1[k] or false) == "table") then
+      merge(t1[k], t2[k])
+    else
+      t1[k] = v
+    end
   end
+  return t1
 end
 loadCurrentScreenSettings()
+
+
+-- Other shortcuts
+-- Omnifocus scripting
+hs.hotkey.bind({"ctrl"}, "=", function()
+  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.suggest.start.js")
+end)
+
+hs.hotkey.bind({"ctrl"}, "[", function()
+  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.start.js")
+end)
+
+hs.hotkey.bind({"ctrl"}, "]", function()
+  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.end.js")
+end)
+
+hs.hotkey.bind({"ctrl"}, "\\", function()
+  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.complete.js")
+end)
+
+-- Application starters
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
+  hs.application.open("Atom")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "o", function()
+  hs.application.open("OmniFocus")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "g", function()
+  hs.application.open("Google Chrome")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "e", function()
+  hs.application.open("Evernote")
+end)
 
 
 
@@ -129,7 +185,7 @@ function processWindow(window)
 end
 
 function defaultBehavior(window)
-  if (window:size().w <= 1000) then
+  if (window:size().w < 1270) then
     centerWindow(window)
   else
     resizeWindow(window, settings["default"])
@@ -202,7 +258,7 @@ end
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
-    if (app ~= "Hammerspoon" and app ~= "iTunes" and app ~= "OmniFocus") then
+    if (app ~= "Hammerspoon" and app ~= "iTunes" and app ~= "Terminal" and app ~= "Spotify" and app ~= "OmniFocus" and app ~= "Transmission" and app ~= "ExpressVPN" and app ~= "Atom" and app ~= "Tyme2" and app ~= "Tyme") then
       window:application():kill()
     end
   end
