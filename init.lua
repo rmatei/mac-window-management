@@ -1,19 +1,31 @@
+laptopWidth = 1280
+defaultBuffer = 15
+
 -- Set mode, settings & shortcuts based on current screen config
 function loadCurrentScreenSettings()
   screens = hs.screen.allScreens()
-  if #screens == 1 then
+  mainScreenFrame = screens[1]:frame()
+  mainScreenWidth = mainScreenFrame.x2 - mainScreenFrame.x1
+  if mainScreenWidth == laptopWidth then
     -- MacBook Pro Retina is 2560x1600
+    if #screens > 1 then
+      hs.alert.show("Laptop + secondary display mode")
+      sideScreen = screens[2]
+    else
+      hs.alert.show("Laptop mode")
+    end
     mode = 'laptop'
     mainScreen = screens[1]
     laptopScreen = mainScreen
     buffer = 0
   else
     -- Ultrawide 30" is 3440x1440
+    hs.alert.show("External monitor mode")
     mainScreen = screens[1]
     sideScreen = screens[2]
     laptopScreen = sideScreen
     mode = 'external'
-    buffer = 15
+    buffer = defaultBuffer
   end
 
   -- Settings
@@ -35,9 +47,9 @@ function loadCurrentScreenSettings()
   if mode == "laptop" then
     -- Laptop only
     settings["default"] = {mainScreen, merge(fullw, fullh)}
-    settings["Safari"] = {mainScreen, merge(fullw, fullh)}
+    -- settings["Safari"] = {mainScreen, merge(fullw, fullh)}
     -- settings["Atom"] = {mainScreen, maximized}
-    settings["Terminal"] = {laptopScreen, merge(fullw, bottom50)}
+    -- settings["Terminal"] = {laptopScreen, merge(fullw, bottom50)}
   else
     -- External monitor
 
@@ -72,10 +84,10 @@ function loadCurrentScreenSettings()
   settings["OmniFocus"] = {laptopScreen, merge(fullw, fullh)}
 
   -- Shortcuts
-  -- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
-  --   -- Apply settings to all windows on screen
-  --   processAllWindows()
-  -- end)
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "l", function()
+    -- Apply settings to all windows on screen
+    processAllWindows()
+  end)
   -- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
   --   -- Apply to just this window
   --   processWindow(hs.window.frontmostWindow())
@@ -185,7 +197,7 @@ function processWindow(window)
 end
 
 function defaultBehavior(window)
-  if (window:size().w < 1270) then
+  if (window:size().w < (laptopWidth - 2*defaultBuffer)) then -- consider a window custom-sized if it's less smaller than fullscreen, and don't maximize
     centerWindow(window)
   else
     resizeWindow(window, settings["default"])
@@ -193,7 +205,7 @@ function defaultBehavior(window)
 end
 
 function centerWindow(window)
-  hs.alert.show("Centering")
+  -- hs.alert.show("Centering")
   windowFrame = window:frame()
   currentWidth = windowFrame.x2 - windowFrame.x1
   currentHeight = windowFrame.y2 - windowFrame.y1
@@ -205,7 +217,7 @@ function centerWindow(window)
 end
 
 function resizeWindow(window, appSettings)
-  hs.alert.show("Resizing")
+  -- hs.alert.show("Resizing")
   window:setFrame(settingsToFrame(appSettings))
 end
 
@@ -321,7 +333,7 @@ function reloadConfig(files)
   end
 end
 myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig):start()
-hs.alert.show("Config loaded")
+hs.alert.show("Config reloaded")
 -- hs.loadSpoon("ReloadConfiguration") -- alternate that doesn't alert
 -- spoon.ReloadConfiguration:start()
 
