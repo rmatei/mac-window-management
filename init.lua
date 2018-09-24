@@ -144,21 +144,21 @@ loadCurrentScreenSettings()
 
 
 -- Other shortcuts
--- Omnifocus scripting
+-- Flow system
 hs.hotkey.bind({"ctrl"}, "=", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.suggest.start.js")
+  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.suggest.start.js")
 end)
 
 hs.hotkey.bind({"ctrl"}, "[", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.start.js")
+  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.start.js")
 end)
 
 hs.hotkey.bind({"ctrl"}, "]", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.end.js")
+  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.end.js")
 end)
 
 hs.hotkey.bind({"ctrl"}, "\\", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/OmniFocus\\ Scripting/Task.complete.js")
+  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.complete.js")
 end)
 
 -- Application starters
