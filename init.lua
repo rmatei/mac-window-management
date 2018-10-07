@@ -1,3 +1,4 @@
+-- WINDOW MOVER
 laptopWidth = 1280
 defaultBuffer = 15
 
@@ -146,8 +147,7 @@ end
 loadCurrentScreenSettings()
 
 
--- Other shortcuts
--- Flow system
+-- FLOW SYSTEM SHORTCUTS
 hs.hotkey.bind({"ctrl"}, "=", function()
   hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.suggest.start.js")
 end)
@@ -164,7 +164,57 @@ hs.hotkey.bind({"ctrl"}, "\\", function()
   hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.complete.js")
 end)
 
--- Application starters
+
+-- APP SPECIFIC SHORTCUTS
+appShortcuts = {}
+appShortcuts["Safari"] = {
+  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+}
+appShortcuts["Terminal"] = {
+  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+}
+appShortcuts["Spotify"] = {
+  {{"command", "option"}, "f", {"Edit", "Search"}},
+}
+appShortcuts["OmniFocus"] = {
+  {{"command", "shift"}, "v", {"Edit", "Paste and Match Style"}},
+  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+  -- {{"command", "control", "shift"}, "right", {"Organize", "Move", "Move Right"}},
+}
+currentAppShortcuts = {}
+
+-- Define a callback function to be called when application events happen
+function applicationWatcherCallback(appName, eventType, appObject)
+  if (appShortcuts[appName] ~= nil) then
+    if (eventType == hs.application.watcher.activated) then
+      hs.alert.show("Enabling " .. appName)
+      currentAppShortcuts[appName] = {}
+      for key, shortcut in pairs(appShortcuts[appName]) do
+        hotkey = hs.hotkey.new(shortcut[1], shortcut[2], nil, function()
+          appObject:selectMenuItem(shortcut[3])
+        end)
+        hotkey:enable()
+        currentAppShortcuts[appName][#currentAppShortcuts[appName]+1]=hotkey
+      end
+
+    elseif (eventType == hs.application.watcher.deactivated or eventType == hs.application.watcher.terminated) then
+      hs.alert.show("Disabling " .. appName)
+      for key, hotkey in pairs(currentAppShortcuts[appName]) do
+        hotkey:disable()
+      end
+      currentAppShortcuts[appName] = nil
+    end
+  end
+end
+watcher = hs.application.watcher.new(applicationWatcherCallback)
+watcher:start()
+
+
+
+-- APP STARTER SHORTCUTS
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
   hs.application.open("Atom")
 end)
