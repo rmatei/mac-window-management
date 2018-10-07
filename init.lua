@@ -35,6 +35,9 @@ function loadCurrentScreenSettings()
   right30 = {x1=0.7, w=0.3}
   top50 = {y1=0, h=0.5}
   bottom50 = {y1=0.5, h=0.5}
+  top33 = {y1=0, h=1/3}
+  mid33 = {y1=1/3, h=1/3}
+  bottom33 = {y1=0.666, h=0.333}
 
   left50 = {x1=0, w=0.5}
   right50 = {x1=0.5, w=0.5}
@@ -281,7 +284,8 @@ end
 
 function hideAllWindows()
   for i, window in pairs(hs.window.allWindows()) do
-    if (window:application():name() ~= "OmniFocus") then
+    app = window:application():name()
+    if (app ~= "OmniFocus" and app ~= "Terminal") then
       window:application():hide()
     end
   end
