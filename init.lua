@@ -1,5 +1,5 @@
 -- WINDOW MOVER
-laptopWidth = 1280
+laptopWidth = 1440
 defaultBuffer = 15
 
 -- Set mode, settings & shortcuts based on current screen config
@@ -7,6 +7,7 @@ function loadCurrentScreenSettings()
   screens = hs.screen.allScreens()
   mainScreenFrame = screens[1]:frame()
   mainScreenWidth = mainScreenFrame.x2 - mainScreenFrame.x1
+  -- hs.alert.show(mainScreenWidth .. " pixels")
   if mainScreenWidth == laptopWidth then
     -- MacBook Pro Retina is 2560x1600
     if #screens > 1 then
@@ -56,34 +57,36 @@ function loadCurrentScreenSettings()
     -- settings["Terminal"] = {laptopScreen, merge(fullw, bottom50)}
   else
     -- External monitor
+    topLeft = {mainScreen, {x1=0, w=0.3, y1=0, h=0.5}}
+    bottomLeft = {mainScreen, {x1=0, w=0.3, y1=0.5, h=0.5}}
+    topRight = {mainScreen, {x1=0.7, w=0.3, y1=0, h=0.5}}
+    bottomRight = {mainScreen, {x1=0.7, w=0.3, y1=0.5, h=0.5}}
 
     -- Main work apps
     settings["default"] = {mainScreen, merge(mid40, fullh)}
-    settings["Atom"] = {mainScreen, merge(mid40, fullh)}
-    settings["Google Inbox"] = {mainScreen, merge(mid40, fullh)}
+    -- settings["Atom"] = {mainScreen, merge(mid40, fullh)}
 
-    -- Companion apps
-    settings["Google Calendar"] = {mainScreen, merge(left30, fullh)}
+    -- Dev companions
+    settings["Activity Monitor"] = topRight
+    settings["Finder"] = topRight
+    settings["Hammerspoon"] = bottomRight
+    settings["Terminal"] = bottomRight
+
+    -- Non-dev companions
+    settings["Contacts"] = topLeft
+    settings["Messages"] = bottomLeft
+    settings["WhatsApp"] = bottomLeft
     -- settings["OmniFocus"] = {mainScreen, {x1=0, y1=0, w=1/3, h=3/4}}
-    -- settings["Terminal"] = {mainScreen, {x1=0, y1=3/4, w=1/3, h=1/4}}
+    -- settings["Safari"] = {mainScreen, merge(right30, fullh)}
 
     -- Helper / reference apps
-    settings["Google Chrome"] = {mainScreen, merge(right30, fullh)}
+    -- settings["Google Chrome"] = {mainScreen, merge(mid40, fullh)}
+    -- settings["Safari"] = {mainScreen, merge(mid40, fullh)}
 
     -- Non-task related companions
     -- settings["OmniFocus"] = {sideScreen, maximized}
-
     settings["iTunes"] = {sideScreen, merge(fullw, fullh)}
-
-    -- Dev companions
-    settings["Hammerspoon"] = {mainScreen, merge(left30, top50)}
-    -- settings["Contacts"] = {mainScreen, {x1=0, y1=0, w=0.3, h=0.5}}
-    settings["Contacts"] = {mainScreen, merge(left30, bottom50)}
-    -- settings["Terminal"] = {mainScreen, merge(left30, bottom50)}
-    settings["Terminal"] = {mainScreen, {x1=0, w=0.3, y1=0.5, h=0.5}}
-
-    settings["Activity Monitor"] = {mainScreen, merge(left30, top50)}
-    settings["Safari"] = {mainScreen, merge(right30, fullh)}
+    settings["Spotify"] = {sideScreen, merge(fullw, fullh)}
   end
   settings["OmniFocus"] = {laptopScreen, merge(fullw, fullh)}
 
@@ -149,19 +152,19 @@ loadCurrentScreenSettings()
 
 -- FLOW SYSTEM SHORTCUTS
 hs.hotkey.bind({"ctrl"}, "=", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.suggest.start.js")
+  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.start.js")
 end)
 
 hs.hotkey.bind({"ctrl"}, "[", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.start.js")
+  hs.execute("osascript ~/Drive/Code/Flow/Task.start.js")
 end)
 
 hs.hotkey.bind({"ctrl"}, "]", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.end.js")
+  hs.execute("osascript ~/Drive/Code/Flow/Task.end.js")
 end)
 
 hs.hotkey.bind({"ctrl"}, "\\", function()
-  hs.execute("osascript ~/iCloud\\ Drive/Code/Flow/Task.complete.js")
+  hs.execute("osascript ~/Drive/Code/Flow/Task.complete.js")
 end)
 
 
@@ -190,7 +193,7 @@ currentAppShortcuts = {}
 function applicationWatcherCallback(appName, eventType, appObject)
   if (appShortcuts[appName] ~= nil) then
     if (eventType == hs.application.watcher.activated) then
-      hs.alert.show("Enabling " .. appName)
+      -- hs.alert.show("Enabling " .. appName)
       currentAppShortcuts[appName] = {}
       for key, shortcut in pairs(appShortcuts[appName]) do
         hotkey = hs.hotkey.new(shortcut[1], shortcut[2], nil, function()
@@ -201,7 +204,7 @@ function applicationWatcherCallback(appName, eventType, appObject)
       end
 
     elseif (eventType == hs.application.watcher.deactivated or eventType == hs.application.watcher.terminated) then
-      hs.alert.show("Disabling " .. appName)
+      -- hs.alert.show("Disabling " .. appName)
       for key, hotkey in pairs(currentAppShortcuts[appName]) do
         hotkey:disable()
       end
@@ -224,6 +227,9 @@ end)
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "g", function()
   hs.application.open("Google Chrome")
 end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "s", function()
+  hs.application.open("Safari")
+end)
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "e", function()
   hs.application.open("Evernote")
 end)
@@ -239,6 +245,7 @@ function processAllWindows()
 end
 
 function processWindow(window)
+  -- hs.alert.show(window:application():name())
   if (settings[window:title()] ~= nil) then
     -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
     resizeWindow(window, settings[window:title()])
