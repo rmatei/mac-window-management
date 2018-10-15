@@ -19,7 +19,8 @@ function loadCurrentScreenSettings()
     mode = 'laptop'
     mainScreen = screens[1]
     laptopScreen = mainScreen
-    buffer = 0
+    -- buffer = 0
+    buffer = 15 --defaultBuffer
   else
     -- Ultrawide 30" is 3440x1440
     hs.alert.show("External monitor mode")
@@ -57,13 +58,18 @@ function loadCurrentScreenSettings()
     -- settings["Terminal"] = {laptopScreen, merge(fullw, bottom50)}
   else
     -- External monitor
+    center = {mainScreen, {x1=0.3, w=0.4, y1=0, h=1}}
+    left = {mainScreen, {x1=0, w=0.3, y1=0, h=1}}
+    right = {mainScreen, {x1=0.7, w=0.3, y1=0, h=1}}
+
     topLeft = {mainScreen, {x1=0, w=0.3, y1=0, h=0.5}}
     bottomLeft = {mainScreen, {x1=0, w=0.3, y1=0.5, h=0.5}}
     topRight = {mainScreen, {x1=0.7, w=0.3, y1=0, h=0.5}}
     bottomRight = {mainScreen, {x1=0.7, w=0.3, y1=0.5, h=0.5}}
 
     -- Main work apps
-    settings["default"] = {mainScreen, merge(mid40, fullh)}
+    settings["default"] = center
+    settings["OmniFocus"] = {mainScreen, {x1=0, w=0.3, y1=0, h=1}}
     -- settings["Atom"] = {mainScreen, merge(mid40, fullh)}
 
     -- Dev companions
@@ -73,9 +79,11 @@ function loadCurrentScreenSettings()
     settings["Terminal"] = bottomRight
 
     -- Non-dev companions
-    settings["Contacts"] = topLeft
-    settings["Messages"] = bottomLeft
-    settings["WhatsApp"] = bottomLeft
+    settings["Contacts"] = topRight -- {mainScreen, {x1=0.3, w=0.4, y1=0, h=0.4}}
+    settings["Messages"] = center -- {mainScreen, {x1=0.3, w=0.4, y1=0.4, h=0.6}}
+    settings["WhatsApp"] = center -- {mainScreen, {x1=0.3, w=0.4, y1=0.4, h=0.6}}
+    settings["Google Calendar"] = right
+    settings["Calendar"] = right
     -- settings["OmniFocus"] = {mainScreen, {x1=0, y1=0, w=1/3, h=3/4}}
     -- settings["Safari"] = {mainScreen, merge(right30, fullh)}
 
@@ -88,7 +96,7 @@ function loadCurrentScreenSettings()
     settings["iTunes"] = {sideScreen, merge(fullw, fullh)}
     settings["Spotify"] = {sideScreen, merge(fullw, fullh)}
   end
-  settings["OmniFocus"] = {laptopScreen, merge(fullw, fullh)}
+  -- settings["OmniFocus"] = {laptopScreen, merge(fullw, fullh)}
 
   -- Shortcuts
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "l", function()
@@ -257,7 +265,7 @@ function processWindow(window)
 end
 
 function defaultBehavior(window)
-  if (window:size().w < (laptopWidth - 2*defaultBuffer)) then -- consider a window custom-sized if it's less smaller than fullscreen, and don't maximize
+  if (window:size().w < (laptopWidth/2 - 2*defaultBuffer)) then -- consider a window custom-sized if it's less smaller than fullscreen, and don't maximize
     centerWindow(window)
   else
     resizeWindow(window, settings["default"])
@@ -367,7 +375,7 @@ function applicationWatcher(appName, eventType, appObject)
     end
   end
   -- if (eventType == hs.application.watcher.activated) then
-  --   processWindow(hs.window.frontmostWindow())
+    -- processWindow(hs.window.frontmostWindow())
   -- end
 end
 appWatcher = hs.application.watcher.new(applicationWatcher)
