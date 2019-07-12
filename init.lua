@@ -1,31 +1,23 @@
 -- WINDOW MOVER
-laptopWidth = 1440
+laptopMinWidth = 1280
+laptopMaxWidth = 1440
 defaultBuffer = 15
 
 -- Set mode, settings & shortcuts based on current screen config
 function loadCurrentScreenSettings()
   screens = hs.screen.allScreens()
-  mainScreenFrame = screens[1]:frame()
-  mainScreenWidth = mainScreenFrame.x2 - mainScreenFrame.x1
-  -- hs.alert.show(mainScreenWidth .. " pixels")
-  if mainScreenWidth == laptopWidth then
-    -- MacBook Pro Retina is 2560x1600
-    if #screens > 1 then
-      hs.alert.show("Laptop + secondary display mode")
-      sideScreen = screens[2]
-    else
-      hs.alert.show("Laptop mode")
-    end
+
+  if #screens == 1 then
+    hs.alert.show("Single-screen mode")
     mode = 'laptop'
     mainScreen = screens[1]
     laptopScreen = mainScreen
-    -- buffer = 0
-    buffer = 15 --defaultBuffer
+    buffer = 0
   else
     -- Ultrawide 30" is 3440x1440
-    hs.alert.show("External monitor mode")
-    mainScreen = screens[1]
-    sideScreen = screens[2]
+    hs.alert.show("2-screen mode")
+    mainScreen = screens[2]
+    sideScreen = screens[1]
     laptopScreen = sideScreen
     mode = 'external'
     buffer = defaultBuffer
@@ -53,9 +45,6 @@ function loadCurrentScreenSettings()
   if mode == "laptop" then
     -- Laptop only
     settings["default"] = {mainScreen, merge(fullw, fullh)}
-    -- settings["Safari"] = {mainScreen, merge(fullw, fullh)}
-    -- settings["Atom"] = {mainScreen, maximized}
-    -- settings["Terminal"] = {laptopScreen, merge(fullw, bottom50)}
   else
     -- External monitor
     center = {mainScreen, {x1=0.3, w=0.4, y1=0, h=1}}
@@ -69,14 +58,13 @@ function loadCurrentScreenSettings()
 
     -- Main work apps
     settings["default"] = center
-    settings["OmniFocus"] = {mainScreen, {x1=0, w=0.3, y1=0, h=1}}
-    -- settings["Atom"] = {mainScreen, merge(mid40, fullh)}
+    settings["OmniFocus"] = {mainScreen, {x1=0, w=0.4, y1=0, h=1}}
 
     -- Dev companions
     settings["Activity Monitor"] = topRight
     settings["Finder"] = topRight
     settings["Hammerspoon"] = bottomRight
-    settings["Terminal"] = bottomRight
+    settings["Terminal"] = sideScreen
 
     -- Non-dev companions
     settings["Contacts"] = topRight -- {mainScreen, {x1=0.3, w=0.4, y1=0, h=0.4}}
@@ -84,29 +72,27 @@ function loadCurrentScreenSettings()
     settings["WhatsApp"] = center -- {mainScreen, {x1=0.3, w=0.4, y1=0.4, h=0.6}}
     settings["Google Calendar"] = right
     settings["Calendar"] = right
-    -- settings["OmniFocus"] = {mainScreen, {x1=0, y1=0, w=1/3, h=3/4}}
-    -- settings["Safari"] = {mainScreen, merge(right30, fullh)}
 
     -- Helper / reference apps
     -- settings["Google Chrome"] = {mainScreen, merge(mid40, fullh)}
     -- settings["Safari"] = {mainScreen, merge(mid40, fullh)}
 
     -- Non-task related companions
-    -- settings["OmniFocus"] = {sideScreen, maximized}
+    settings["OmniFocus"] = {sideScreen, maximized}
     settings["iTunes"] = {sideScreen, merge(fullw, fullh)}
     settings["Spotify"] = {sideScreen, merge(fullw, fullh)}
   end
-  -- settings["OmniFocus"] = {laptopScreen, merge(fullw, fullh)}
 
   -- Shortcuts
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "l", function()
     -- Apply settings to all windows on screen
+    hs.alert.show("Arranging all...")
     processAllWindows()
   end)
-  -- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
-  --   -- Apply to just this window
-  --   processWindow(hs.window.frontmostWindow())
-  -- end)
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
+    -- Apply to just this window
+    processWindow(hs.window.frontmostWindow())
+  end)
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
     hideAllWindows()
   end)
@@ -159,20 +145,39 @@ loadCurrentScreenSettings()
 
 
 -- FLOW SYSTEM SHORTCUTS
-hs.hotkey.bind({"ctrl"}, "=", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.start.js")
+
+hs.hotkey.bind({"ctrl", "shift"}, "0", function()
+  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.anyinblock.start.js")
 end)
 
-hs.hotkey.bind({"ctrl"}, "[", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.start.js")
+hs.hotkey.bind({"ctrl", "shift"}, "-", function()
+  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.any.start.js")
 end)
 
-hs.hotkey.bind({"ctrl"}, "]", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.end.js")
+hs.hotkey.bind({"ctrl", "shift"}, "=", function()
+  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.flow.start.js")
 end)
 
-hs.hotkey.bind({"ctrl"}, "\\", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.complete.js")
+-- hs.hotkey.bind({"ctrl", "shift"}, "[", function()
+--   hs.execute("osascript ~/Drive/Code/Flow/Task.start.js")
+-- end)
+
+-- hs.hotkey.bind({"ctrl", "shift"}, "[", function()
+--   hs.execute("osascript ~/Drive/Code/Flow/Task.start.AT.js")
+-- end)
+
+-- hs.hotkey.bind({"ctrl", "shift"}, "]", function()
+--   hs.execute("osascript ~/Drive/Code/Flow/Task.end.js")
+-- end)
+
+-- hs.hotkey.bind({"ctrl", "shift"}, "\\", function()
+--   hs.execute("osascript ~/Drive/Code/Flow/Task.complete.js")
+-- end)
+
+
+-- DEV WORKFLOW
+hs.hotkey.bind({"ctrl", "shift"}, "/", function()
+  hs.execute("osascript ~/Drive/Code/Flow/Dev.rerun.command.js")
 end)
 
 
@@ -186,14 +191,10 @@ appShortcuts["Terminal"] = {
   {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
   {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
 }
-appShortcuts["Spotify"] = {
-  {{"command", "option"}, "f", {"Edit", "Search"}},
-}
 appShortcuts["OmniFocus"] = {
   {{"command", "shift"}, "v", {"Edit", "Paste and Match Style"}},
   {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
   {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
-  -- {{"command", "control", "shift"}, "right", {"Organize", "Move", "Move Right"}},
 }
 currentAppShortcuts = {}
 
@@ -226,17 +227,11 @@ watcher:start()
 
 
 -- APP STARTER SHORTCUTS
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
-  hs.application.open("Atom")
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "o", function()
-  hs.application.open("OmniFocus")
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "v", function()
+  hs.application.open("Visual Studio Code")
 end)
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "g", function()
   hs.application.open("Google Chrome")
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "s", function()
-  hs.application.open("Safari")
 end)
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "e", function()
   hs.application.open("Evernote")
@@ -277,7 +272,7 @@ function centerWindow(window)
   windowFrame = window:frame()
   currentWidth = windowFrame.x2 - windowFrame.x1
   currentHeight = windowFrame.y2 - windowFrame.y1
-  screenFrame = screens[1]:frame()
+  screenFrame = mainScreen:frame()
   hOffset = ((screenFrame.x2 - screenFrame.x1) - currentWidth) / 2
   vOffset = ((screenFrame.y2 - screenFrame.y1) - currentHeight) / 2
   -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
@@ -338,13 +333,14 @@ end
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
-    if (app ~= "Hammerspoon" and app ~= "iTunes" and app ~= "Terminal" and app ~= "Spotify" and app ~= "OmniFocus" and app ~= "Transmission" and app ~= "ExpressVPN" and app ~= "Atom" and app ~= "Tyme2" and app ~= "Tyme") then
+    if (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and app ~= "Code" and app ~= "Notification Center" and app ~= "Tyme 2" and app ~= "Activity Monitor") then
+      hs.alert.show("Killing " .. app)
       window:application():kill()
     end
   end
 
-  sleep(0.5)
-  hs.application.find("Chrome"):kill9()
+  -- sleep(0.5)
+  -- hs.application.find("Chrome"):kill9()
 end
 
 function hideAllWindows()
