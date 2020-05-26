@@ -1,187 +1,256 @@
--- WINDOW MOVER
-laptopMinWidth = 1280
-laptopMaxWidth = 1440
-defaultBuffer = 15
+-- WINDOW MANAGEMENT
 
--- Set mode, settings & shortcuts based on current screen config
+-- First, some boilerplate to load different settings based on whether 1 or 2 screens are connected...
 function loadCurrentScreenSettings()
-  screens = hs.screen.allScreens()
+  settings = {}
 
+  screens = hs.screen.allScreens()
   if #screens == 1 then
-    hs.alert.show("Single-screen mode")
     mode = 'laptop'
     mainScreen = screens[1]
-    laptopScreen = mainScreen
+    sideScreen = mainScreen
     buffer = 0
   else
-    -- Ultrawide 30" is 3440x1440
-    hs.alert.show("2-screen mode")
-    mainScreen = screens[2]
-    sideScreen = screens[1]
-    laptopScreen = sideScreen
+    -- IMPORTANT: whichever screen menubar is assigned to (from Mac display settings) is considered the big monitor. 
+    -- If your setup is reversed, then switch 1 and 2. 
+    mainScreen = screens[1]
+    sideScreen = screens[2]
     mode = 'external'
-    buffer = defaultBuffer
+    buffer = 15
   end
 
-  -- Settings
+  -- WINDOW MANAGEMENT: Actual config
+  -- Specify a frame, 
+  -- a global shortcut to send current window there (optional)
+  -- & any apps assigned to that frame by default
 
-  left30 = {x1=0, w=0.3}
-  mid40 = {x1=0.3, w=0.4}
-  right30 = {x1=0.7, w=0.3}
-  top50 = {y1=0, h=0.5}
-  bottom50 = {y1=0.5, h=0.5}
-  top33 = {y1=0, h=1/3}
-  mid33 = {y1=1/3, h=1/3}
-  bottom33 = {y1=0.666, h=0.333}
-
-  left50 = {x1=0, w=0.5}
-  right50 = {x1=0.5, w=0.5}
-
-  fullw = {x1=0, w=1}
-  fullh = {y1=0, h=1}
-
-  -- Set different settings for single screen vs. 2
-  settings = {}
-  if mode == "laptop" then
-    -- Laptop only
-    settings["default"] = {mainScreen, merge(fullw, fullh)}
-  else
-    -- External monitor
-    center = {mainScreen, {x1=0.3, w=0.4, y1=0, h=1}}
-    left = {mainScreen, {x1=0, w=0.3, y1=0, h=1}}
-    right = {mainScreen, {x1=0.7, w=0.3, y1=0, h=1}}
-
-    topLeft = {mainScreen, {x1=0, w=0.3, y1=0, h=0.5}}
-    bottomLeft = {mainScreen, {x1=0, w=0.3, y1=0.5, h=0.5}}
-    topRight = {mainScreen, {x1=0.7, w=0.3, y1=0, h=0.5}}
-    bottomRight = {mainScreen, {x1=0.7, w=0.3, y1=0.5, h=0.5}}
-
-    -- Main work apps
-    settings["default"] = center
-    settings["OmniFocus"] = {mainScreen, {x1=0, w=0.4, y1=0, h=1}}
-
-    -- Dev companions
-    settings["Activity Monitor"] = topRight
-    settings["Finder"] = topRight
-    settings["Hammerspoon"] = bottomRight
-    settings["Terminal"] = sideScreen
-
-    -- Non-dev companions
-    settings["Contacts"] = topRight -- {mainScreen, {x1=0.3, w=0.4, y1=0, h=0.4}}
-    settings["Messages"] = center -- {mainScreen, {x1=0.3, w=0.4, y1=0.4, h=0.6}}
-    settings["WhatsApp"] = center -- {mainScreen, {x1=0.3, w=0.4, y1=0.4, h=0.6}}
-    settings["Google Calendar"] = right
-    settings["Calendar"] = right
-
-    -- Helper / reference apps
-    -- settings["Google Chrome"] = {mainScreen, merge(mid40, fullh)}
-    -- settings["Safari"] = {mainScreen, merge(mid40, fullh)}
-
-    -- Non-task related companions
-    settings["OmniFocus"] = {sideScreen, maximized}
-    settings["iTunes"] = {sideScreen, merge(fullw, fullh)}
-    settings["Spotify"] = {sideScreen, merge(fullw, fullh)}
-  end
-
-  -- Shortcuts
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "l", function()
-    -- Apply settings to all windows on screen
-    hs.alert.show("Arranging all...")
-    processAllWindows()
+  -- Even halves
+  left = {mainScreen, {x1=0, w=0.5, y1=0, h=1}}
+  right = {mainScreen, {x1=0.5, w=0.5, y1=0, h=1}}
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+    resizeWindow(hs.window.frontmostWindow(), left)
   end)
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
-    -- Apply to just this window
-    processWindow(hs.window.frontmostWindow())
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+    resizeWindow(hs.window.frontmostWindow(), right)
   end)
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function()
-    hideAllWindows()
+  
+  -- Uneven halves
+  leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
+  rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
+  hs.hotkey.bind({"cmd", "shift", "ctrl"}, "left", function()
+    resizeWindow(hs.window.frontmostWindow(), leftBig)
   end)
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "q", function()
-    quitAll()
+  hs.hotkey.bind({"cmd", "shift", "ctrl"}, "right", function()
+    resizeWindow(hs.window.frontmostWindow(), rightSmall)
   end)
+  settings["Code"] = leftBig
 
+  -- Maximize on main screen
+  maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
-    resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(fullw, fullh)})
+    resizeWindow(hs.window.frontmostWindow(), maximized)
   end)
+  
+  -- Center on main screen
+  centerBig = {mainScreen, {x1=0.25, w=0.5, y1=0, h=1}}
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
-    centerWindow(hs.window.frontmostWindow())
+    resizeWindow(hs.window.frontmostWindow(), centerBig)
   end)
 
-  -- if mode == 'laptop' then
-    -- Halves
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(left50, fullh)})
-    end)
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(right50, fullh)})
-    end)
-  -- else
-    -- Thirds
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "1", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(left30, fullh)})
-    end)
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "2", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(mid40, fullh)})
-    end)
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "3", function()
-      resizeWindow(hs.window.frontmostWindow(), {mainScreen, merge(right30, fullh)})
-    end)
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
-      resizeWindow(hs.window.frontmostWindow(), {sideScreen, merge(fullw, fullh)})
-    end)
-  -- end
-end
-function merge(t1, t2)
-  for k, v in pairs(t2) do
-    if (type(v) == "table") and (type(t1[k] or false) == "table") then
-      merge(t1[k], t2[k])
-    else
-      t1[k] = v
-    end
+  -- Small apps
+  if mode == "laptop" then
+    centerSmall = {mainScreen, {x1=1/6, w=2/3, y1=1/6, h=2/3}}
+  else
+    centerSmall = {mainScreen, {x1=0.3, w=0.4, y1=1/6, h=2/3}}
   end
-  return t1
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "s", function()
+    resizeWindow(hs.window.frontmostWindow(), centerSmall)
+  end)
+  settings["Preview"] = centerSmall
+  settings["Finder"] = centerSmall
+  settings["Contacts"] = centerSmall
+  settings["WhatsApp"] = centerSmall
+  settings["Slack"] = centerSmall
+  settings["Facebook Messenger"] = centerSmall
+
+  -- Maximize on side screen (companions when in 2-screen mode)
+  side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
+    resizeWindow(hs.window.frontmostWindow(), side)
+  end)
+  settings["iTunes"] = side
+  settings["Spotify"] = side
+  settings["Chromium"] = side
+
+  -- Default for apps not otherwise specified
+  if mode == "laptop" then
+    -- Laptop: fullscreen
+    settings["default"] = maximized
+    hs.alert.show("Laptop mode")
+  else
+    -- 2 screens: at the center of main monitor, decide where to send it
+    settings["default"] = centerBig
+    hs.alert.show("2-screen mode")
+  end
 end
 loadCurrentScreenSettings()
 
 
--- FLOW SYSTEM SHORTCUTS
 
-hs.hotkey.bind({"ctrl", "shift"}, "0", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.anyinblock.start.js")
+-- WINDOW MANAGEMENT: Methods to process this or all windows
+
+-- [Q]uit all non-essential programs
+function quitAll()
+  for i, window in pairs(hs.window.allWindows()) do
+    app = window:application():name()
+    if (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and app ~= "Code" and app ~= "Notification Center" and app ~= "Tyme 2" and app ~= "Activity Monitor") then
+      hs.alert.show("Killing " .. app)
+      window:application():kill()
+    end
+  end
+  -- sleep(0.5) -- When using Chrome Apps, they won't all shut down normally. 
+  -- hs.application.find("Chrome"):kill9()
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "q", function()
+  quitAll()
 end)
 
-hs.hotkey.bind({"ctrl", "shift"}, "-", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.any.start.js")
+-- [H]ide all windows
+function hideAllWindows()
+  for i, window in pairs(hs.window.allWindows()) do
+    app = window:application():name()
+    if (app ~= "OmniFocus" and app ~= "Terminal") then
+      window:application():hide()
+    end
+  end
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function() 
+  hideAllWindows()
 end)
 
-hs.hotkey.bind({"ctrl", "shift"}, "=", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Task.suggest.flow.start.js")
+-- Resize [A]ll windows according to settings
+function processAllWindows()
+  hs.alert.show("Arranging all...")
+  for i, window in pairs(hs.window.allWindows()) do
+    processWindow(window)
+  end
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
+  processAllWindows()
 end)
 
--- hs.hotkey.bind({"ctrl", "shift"}, "[", function()
---   hs.execute("osascript ~/Drive/Code/Flow/Task.start.js")
+-- Resize just [T]his active window
+function processWindow(window)
+  -- hs.alert.show("Arranging " .. window:application():name())
+  app = window:application():name()
+  -- if (settings[window:title()] ~= nil) then
+    -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
+    -- hs.alert.show(app .. " ->  by title -> " .. window:title())
+    -- resizeWindow(window, settings[window:title()])
+  if (settings[app]) then
+    hs.alert.show(app .. " ->  by name")
+    resizeWindow(window, settings[app])
+  else
+    hs.alert.show(app .. " ->  default")
+    resizeWindow(window, settings["default"])
+  end
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
+  processWindow(hs.window.frontmostWindow())
+end)
+
+-- [C]enter this window
+-- function centerWindow(window)
+--   hs.alert.show("Centering")
+--   windowFrame = window:frame()
+--   currentWidth = windowFrame.x2 - windowFrame.x1
+--   currentHeight = windowFrame.y2 - windowFrame.y1
+--   screenFrame = mainScreen:frame()
+--   hOffset = ((screenFrame.x2 - screenFrame.x1) - currentWidth) / 2
+--   vOffset = ((screenFrame.y2 - screenFrame.y1) - currentHeight) / 2
+--   -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
+--   window:move(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
+-- end
+-- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
+--   centerWindow(hs.window.frontmostWindow())
 -- end)
 
--- hs.hotkey.bind({"ctrl", "shift"}, "[", function()
---   hs.execute("osascript ~/Drive/Code/Flow/Task.start.AT.js")
--- end)
-
--- hs.hotkey.bind({"ctrl", "shift"}, "]", function()
---   hs.execute("osascript ~/Drive/Code/Flow/Task.end.js")
--- end)
-
--- hs.hotkey.bind({"ctrl", "shift"}, "\\", function()
---   hs.execute("osascript ~/Drive/Code/Flow/Task.complete.js")
--- end)
 
 
--- DEV WORKFLOW
-hs.hotkey.bind({"ctrl", "shift"}, "/", function()
-  hs.execute("osascript ~/Drive/Code/Flow/Dev.rerun.command.js")
+-- WINDOW MANAGEMENT: Hooks to watch and process
+
+-- When new app is launched
+function applicationWatcher(appName, eventType, appObject)
+  if (eventType == hs.application.watcher.launched) then
+    -- Workaround for Chrome apps - windows belong to Chrome
+    -- if string.find(appObject:path(), "Chrome Apps") then
+    --   appObject = hs.application.find("Chrome")
+    -- end
+
+    sleep(0.25) -- Needed to catch it sometimes
+    windows = appObject:allWindows()
+    for i, window in pairs(windows) do
+      processWindow(window)
+    end
+  end
+  -- For some apps that don't launch, process on activation
+  if (eventType == hs.application.watcher.activated) then
+    if (appObject:name() == "Finder") then
+      processWindow(hs.window.frontmostWindow())
+    end
+  end
+end
+appWatcher = hs.application.watcher.new(applicationWatcher)
+appWatcher:start()
+
+-- When screens are switched
+function screenWatcher()
+  loadCurrentScreenSettings()
+  processAllWindows()
+end
+scrWatcher = hs.screen.watcher.new(screenWatcher)
+scrWatcher:start()
+
+-- Automatically reload config when the file is saved (from examples)
+function reloadConfig(files)
+  doReload = false
+  for _,file in pairs(files) do
+    if file:sub(-4) == ".lua" then
+      doReload = true
+    end
+  end
+  if doReload then
+    hs.reload()
+  end
+end
+myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig):start()
+-- hs.loadSpoon("ReloadConfiguration") -- alternate that doesn't alert
+-- spoon.ReloadConfiguration:start()
+
+
+
+-- SHORTCUTS TO START/FOCUS APPS
+
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "v", function()
+  hs.application.open("Visual Studio Code")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "g", function()
+  hs.application.open("Google Chrome")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "e", function()
+  hs.application.open("Evernote")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
+  hs.application.open("Messages")
+end)
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "l", function()
+  hs.application.open("Calendar")
 end)
 
 
--- APP SPECIFIC SHORTCUTS
+
+-- ADD CUSTOM SHORTCUTS TO APPS
+
 appShortcuts = {}
 appShortcuts["Safari"] = {
   {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
@@ -226,64 +295,9 @@ watcher:start()
 
 
 
--- APP STARTER SHORTCUTS
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "v", function()
-  hs.application.open("Visual Studio Code")
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "g", function()
-  hs.application.open("Google Chrome")
-end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "e", function()
-  hs.application.open("Evernote")
-end)
+-- HELPERS
 
-
-
--- WINDOW PROCESSING
-
-function processAllWindows()
-  for i, window in pairs(hs.window.allWindows()) do
-    processWindow(window)
-  end
-end
-
-function processWindow(window)
-  -- hs.alert.show(window:application():name())
-  if (settings[window:title()] ~= nil) then
-    -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
-    resizeWindow(window, settings[window:title()])
-  elseif (settings[window:application():name()] ~= nil) then
-    resizeWindow(window, settings[window:application():name()])
-  else
-    defaultBehavior(window)
-  end
-end
-
-function defaultBehavior(window)
-  if (window:size().w < (laptopWidth/2 - 2*defaultBuffer)) then -- consider a window custom-sized if it's less smaller than fullscreen, and don't maximize
-    centerWindow(window)
-  else
-    resizeWindow(window, settings["default"])
-  end
-end
-
-function centerWindow(window)
-  -- hs.alert.show("Centering")
-  windowFrame = window:frame()
-  currentWidth = windowFrame.x2 - windowFrame.x1
-  currentHeight = windowFrame.y2 - windowFrame.y1
-  screenFrame = mainScreen:frame()
-  hOffset = ((screenFrame.x2 - screenFrame.x1) - currentWidth) / 2
-  vOffset = ((screenFrame.y2 - screenFrame.y1) - currentHeight) / 2
-  -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
-  window:move(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
-end
-
-function resizeWindow(window, appSettings)
-  -- hs.alert.show("Resizing")
-  window:setFrame(settingsToFrame(appSettings))
-end
-
+-- Take a window size target and turn it into a "Frame" we can give Hammerspoon
 -- example args: {screen, {x1=0, y1=0, w=1/2, h=1}}
 function settingsToFrame (args)
   screenFrame = args[1]:frame()
@@ -326,100 +340,38 @@ function settingsToFrame (args)
   return hs.geometry.rect({x=x1, y=y1, w=w, h=h})
 end
 
-
-
--- OTHER HOUSEKEEPING COMMANDS
-
-function quitAll()
-  for i, window in pairs(hs.window.allWindows()) do
-    app = window:application():name()
-    if (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and app ~= "Code" and app ~= "Notification Center" and app ~= "Tyme 2" and app ~= "Activity Monitor") then
-      hs.alert.show("Killing " .. app)
-      window:application():kill()
-    end
-  end
-
-  -- sleep(0.5)
-  -- hs.application.find("Chrome"):kill9()
+-- Actually resize a window
+function resizeWindow(window, appSettings)
+  window:setFrame(settingsToFrame(appSettings))
 end
 
-function hideAllWindows()
-  for i, window in pairs(hs.window.allWindows()) do
-    app = window:application():name()
-    if (app ~= "OmniFocus" and app ~= "Terminal") then
-      window:application():hide()
-    end
-  end
-end
-
-
-
--- MANAGE / WATCH / RELOAD
-
--- When new app is launched
-function applicationWatcher(appName, eventType, appObject)
-  if (eventType == hs.application.watcher.launched) then
-    -- Workaround for localized apps - windows belong to Chrome
-    if string.find(appObject:path(), "Chrome Apps") then
-      appObject = hs.application.find("Chrome")
-    end
-
-    sleep(0.25) -- Needed to catch it sometimes
-    windows = appObject:allWindows()
-    for i, window in pairs(windows) do
-      processWindow(window)
-    end
-  end
-  -- if (eventType == hs.application.watcher.activated) then
-    -- processWindow(hs.window.frontmostWindow())
-  -- end
-end
-appWatcher = hs.application.watcher.new(applicationWatcher)
-appWatcher:start()
-
--- When screens are switched
-function screenWatcher()
-  loadCurrentScreenSettings()
-  processAllWindows()
-end
-scrWatcher = hs.screen.watcher.new(screenWatcher)
-scrWatcher:start()
-
--- Automatically reload config when the file is saved (from examples)
-function reloadConfig(files)
-  doReload = false
-  for _,file in pairs(files) do
-    if file:sub(-4) == ".lua" then
-      doReload = true
-    end
-  end
-  if doReload then
-    hs.reload()
-  end
-end
-myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig):start()
-hs.alert.show("Config reloaded")
--- hs.loadSpoon("ReloadConfiguration") -- alternate that doesn't alert
--- spoon.ReloadConfiguration:start()
-
-
-
--- HELPERS
-
--- Table pretty printer
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
+-- Wait
 function sleep(n)
   os.execute("sleep " .. tonumber(n))
 end
+
+-- Table pretty printer for debugging
+-- function dump(o)
+--    if type(o) == 'table' then
+--       local s = '{ '
+--       for k,v in pairs(o) do
+--          if type(k) ~= 'number' then k = '"'..k..'"' end
+--          s = s .. '['..k..'] = ' .. dump(v) .. ','
+--       end
+--       return s .. '} '
+--    else
+--       return tostring(o)
+--    end
+-- end
+
+-- Table merger for window settings
+-- function merge(t1, t2)
+--   for k, v in pairs(t2) do
+--     if (type(v) == "table") and (type(t1[k] or false) == "table") then
+--       merge(t1[k], t2[k])
+--     else
+--       t1[k] = v
+--     end
+--   end
+--   return t1
+-- end
