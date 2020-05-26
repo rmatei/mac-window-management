@@ -50,7 +50,7 @@ function loadCurrentScreenSettings()
 
   -- Maximize on main screen
   maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "9", function()
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
     resizeWindow(hs.window.frontmostWindow(), maximized)
   end)
 
@@ -71,7 +71,7 @@ function loadCurrentScreenSettings()
 
   -- Small apps
   if mode == "laptop" then
-    centerSmall = {mainScreen, {x1=1/6, w=2/3, y1=1/6, h=2/3}}
+    centerSmall = {mainScreen, {x1=1/6, w=2/3, y1=0.0, h=1}}
   else
     centerSmall = {mainScreen, {x1=0.3, w=0.4, y1=1/6, h=2/3}}
   end
@@ -200,7 +200,7 @@ function applicationWatcher(appName, eventType, appObject)
     for i, window in pairs(windows) do
       processWindow(window)
     end
-    sleep(2) -- Try again if app is slow
+    sleep(1.5) -- Try again if app is slow
     windows = appObject:allWindows()
     for i, window in pairs(windows) do
       processWindow(window)
@@ -244,20 +244,38 @@ myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConf
 
 -- SHORTCUTS TO START/FOCUS APPS
 
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "v", function()
+hs.hotkey.bind({"cmd", "ctrl"}, "v", function()
   hs.application.open("Visual Studio Code")
 end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "g", function()
+hs.hotkey.bind({"cmd", "ctrl"}, "g", function()
   hs.application.open("Google Chrome")
 end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "e", function()
+hs.hotkey.bind({"cmd", "ctrl"}, "e", function()
   hs.application.open("Evernote")
 end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
+hs.hotkey.bind({"cmd", "ctrl"}, "l", function()
+  hs.application.open("Calendar")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "s", function()
+  hs.application.open("Spotify")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "t", function()
+  hs.application.open("Terminal")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "n", function()
+  hs.application.open("Notes")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "m", function()
   hs.application.open("Messages")
 end)
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "l", function()
-  hs.application.open("Calendar")
+hs.hotkey.bind({"cmd", "ctrl"}, "w", function()
+  hs.application.open("WhatsApp")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "c", function()
+  hs.application.open("Contacts")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "k", function()
+  hs.application.open("Slack")
 end)
 
 
