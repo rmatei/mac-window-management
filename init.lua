@@ -2,7 +2,7 @@
 
 -- First, some boilerplate to load different settings based on whether 1 or 2 screens are connected...
 function loadCurrentScreenSettings()
-  settings = {}
+  appSettings = {}
 
   screens = hs.screen.allScreens()
   if #screens == 1 then
@@ -33,6 +33,10 @@ function loadCurrentScreenSettings()
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
     resizeWindow(hs.window.frontmostWindow(), right)
   end)
+  if mode == "external" then
+    appSettings["Code"] = left
+    appSettings["Calendar"] = right
+  end
   
   -- Uneven halves
   leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
@@ -43,13 +47,21 @@ function loadCurrentScreenSettings()
   hs.hotkey.bind({"cmd", "shift", "ctrl"}, "right", function()
     resizeWindow(hs.window.frontmostWindow(), rightSmall)
   end)
-  settings["Code"] = leftBig
 
   -- Maximize on main screen
   maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "9", function()
     resizeWindow(hs.window.frontmostWindow(), maximized)
   end)
+
+  -- Maximize on side screen
+  side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
+    resizeWindow(hs.window.frontmostWindow(), side)
+  end)
+  appSettings["iTunes"] = side
+  appSettings["Spotify"] = side
+  appSettings["Chromium"] = side
   
   -- Center on main screen
   centerBig = {mainScreen, {x1=0.25, w=0.5, y1=0, h=1}}
@@ -66,30 +78,24 @@ function loadCurrentScreenSettings()
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "s", function()
     resizeWindow(hs.window.frontmostWindow(), centerSmall)
   end)
-  settings["Preview"] = centerSmall
-  settings["Finder"] = centerSmall
-  settings["Contacts"] = centerSmall
-  settings["WhatsApp"] = centerSmall
-  settings["Slack"] = centerSmall
-  settings["Facebook Messenger"] = centerSmall
-
-  -- Maximize on side screen (companions when in 2-screen mode)
-  side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
-    resizeWindow(hs.window.frontmostWindow(), side)
-  end)
-  settings["iTunes"] = side
-  settings["Spotify"] = side
-  settings["Chromium"] = side
+  appSettings["Preview"] = centerSmall
+  appSettings["Finder"] = centerSmall
+  appSettings["Contacts"] = centerSmall
+  appSettings["Notes"] = centerSmall
+  appSettings["Terminal"] = centerSmall
+  appSettings["Messages"] = centerSmall
+  appSettings["WhatsApp"] = centerSmall
+  appSettings["Slack"] = centerSmall
+  appSettings["Facebook Messenger"] = centerSmall
 
   -- Default for apps not otherwise specified
   if mode == "laptop" then
     -- Laptop: fullscreen
-    settings["default"] = maximized
+    appSettings["default"] = maximized
     hs.alert.show("Laptop mode")
   else
     -- 2 screens: at the center of main monitor, decide where to send it
-    settings["default"] = centerBig
+    appSettings["default"] = centerBig
     hs.alert.show("2-screen mode")
   end
 end
@@ -99,10 +105,12 @@ loadCurrentScreenSettings()
 
 -- WINDOW MANAGEMENT: Methods to process this or all windows
 
--- [Q]uit all non-essential programs
+-- [Q]uit all apps with open windows, e.g. when starting a focus period
+-- or freeing up memory
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
+    -- Specify which apps are allowed to keep running in the background
     if (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and app ~= "Code" and app ~= "Notification Center" and app ~= "Tyme 2" and app ~= "Activity Monitor") then
       hs.alert.show("Killing " .. app)
       window:application():kill()
@@ -143,16 +151,16 @@ end)
 function processWindow(window)
   -- hs.alert.show("Arranging " .. window:application():name())
   app = window:application():name()
-  -- if (settings[window:title()] ~= nil) then
+  -- if (appSettings[window:title()] ~= nil) then
     -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
     -- hs.alert.show(app .. " ->  by title -> " .. window:title())
-    -- resizeWindow(window, settings[window:title()])
-  if (settings[app]) then
-    hs.alert.show(app .. " ->  by name")
-    resizeWindow(window, settings[app])
-  else
-    hs.alert.show(app .. " ->  default")
-    resizeWindow(window, settings["default"])
+    -- resizeWindow(window, appSettings[window:title()])
+  if (appSettings[app]) then
+    -- hs.alert.show(app .. " ->  custom frame")
+    resizeWindow(window, appSettings[app])
+  elseif (app ~= "Hammerspoon") then
+    -- hs.alert.show(app .. " ->  default frame")
+    resizeWindow(window, appSettings["default"])
   end
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
@@ -188,6 +196,11 @@ function applicationWatcher(appName, eventType, appObject)
     -- end
 
     sleep(0.25) -- Needed to catch it sometimes
+    windows = appObject:allWindows()
+    for i, window in pairs(windows) do
+      processWindow(window)
+    end
+    sleep(2) -- Try again if app is slow
     windows = appObject:allWindows()
     for i, window in pairs(windows) do
       processWindow(window)
