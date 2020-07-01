@@ -242,42 +242,68 @@ myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConf
 
 
 
--- SHORTCUTS TO START/FOCUS APPS
+-- SHORTCUTS TO QUICK OPEN APPS & WEBSITES
 
-hs.hotkey.bind({"cmd", "ctrl"}, "v", function()
-  hs.application.open("Visual Studio Code")
+-- Core work
+hs.hotkey.bind({"cmd", "ctrl"}, "[", function()
+  openApp("Visual Studio Code", "Code")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "g", function()
-  hs.application.open("Google Chrome")
-end)
-hs.hotkey.bind({"cmd", "ctrl"}, "e", function()
-  hs.application.open("Evernote")
-end)
-hs.hotkey.bind({"cmd", "ctrl"}, "l", function()
-  hs.application.open("Calendar")
-end)
-hs.hotkey.bind({"cmd", "ctrl"}, "s", function()
-  hs.application.open("Spotify")
+hs.hotkey.bind({"cmd", "ctrl"}, "]", function()
+  openApp("Google Chrome")
 end)
 hs.hotkey.bind({"cmd", "ctrl"}, "t", function()
-  hs.application.open("Terminal")
+  openApp("Terminal")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "n", function()
-  hs.application.open("Notes")
-end)
+-- hs.hotkey.bind({"cmd", "ctrl"}, "/", function()
+--   openApp("Chromium")
+-- end)
+
+-- Communication
 hs.hotkey.bind({"cmd", "ctrl"}, "m", function()
-  hs.application.open("Messages")
+  openApp("Texts")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "f", function()
+  openApp("Facebook Messenger")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "e", function()
+  hs.execute("open 'https://mail.google.com'")
 end)
 hs.hotkey.bind({"cmd", "ctrl"}, "w", function()
-  hs.application.open("WhatsApp")
-end)
-hs.hotkey.bind({"cmd", "ctrl"}, "c", function()
-  hs.application.open("Contacts")
+  openApp("WhatsApp")
 end)
 hs.hotkey.bind({"cmd", "ctrl"}, "k", function()
-  hs.application.open("Slack")
+  openApp("Slack")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "z", function()
+  openApp("zoom.us")
 end)
 
+-- Other
+hs.hotkey.bind({"cmd", "ctrl"}, "c", function()
+  -- hs.execute("open 'https://calendar.google.com'")
+  openApp("Calendar")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "s", function()
+  openApp("Spotify")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "n", function()
+  openApp("Notes")
+end)
+hs.hotkey.bind({"cmd", "ctrl"}, "v", function()
+  openApp("Evernote")
+end)
+
+-- Focus an app, or if already focused, then toggle between tabs.
+function openApp(name, windowName)
+  -- Sometimes the window "app name" is not the same as name needed to open app, then pass it as windowName. Use this to check if they differ.
+  -- hs.alert(name .. ',' .. hs.window.frontmostWindow():application():name())
+  windowName = windowName or name
+  if(hs.window.frontmostWindow():application():name() == windowName) then
+    hs.eventtap.keyStroke({"cmd", "option"}, "right")
+  else
+    hs.application.open(name)
+  end
+end
 
 
 -- ADD CUSTOM SHORTCUTS TO APPS
