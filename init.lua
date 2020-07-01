@@ -149,8 +149,12 @@ end)
 
 -- Resize just [T]his active window
 function processWindow(window)
+  windowFrame = window:frame()
+  currentWidth = windowFrame.x2 - windowFrame.x1
+
   -- hs.alert.show("Arranging " .. window:application():name())
   app = window:application():name()
+  -- hs.alert.show(app .. " ->  by title -> " .. window:title())
   -- if (appSettings[window:title()] ~= nil) then
     -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
     -- hs.alert.show(app .. " ->  by title -> " .. window:title())
@@ -158,7 +162,11 @@ function processWindow(window)
   if (appSettings[app]) then
     -- hs.alert.show(app .. " ->  custom frame")
     resizeWindow(window, appSettings[app])
-  elseif (app ~= "Hammerspoon") then
+  elseif (currentWidth <= 800) then
+    -- small windows get centered instead of resized
+    -- hs.alert.show(app .. " ->  center")
+    centerWindow(window)
+  else
     -- hs.alert.show(app .. " ->  default frame")
     resizeWindow(window, appSettings["default"])
   end
@@ -208,18 +216,39 @@ function applicationWatcher(appName, eventType, appObject)
   end
   -- For some apps that don't launch, process on activation
   if (eventType == hs.application.watcher.activated) then
-    if (appObject:name() == "Finder") then
+    if (appObject:name() == "Finder" or string.find(hs.window.frontmostWindow():title(), "New Tab")) then
       processWindow(hs.window.frontmostWindow())
     end
+    -- hs.alert(hs.window.frontmostWindow():title())
   end
 end
 appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
 
+-- function windowWatcher(appName, eventType, appObject)
+--   hs.alert("Window" .. appName)
+--   -- if (eventType == hs.uielement.watcher.windowCreated) then
+--   --   if (appObject:name() == "Finder" or string.find(hs.window.frontmostWindow():title(), "New Tab")) then
+--   --     processWindow(hs.window.frontmostWindow())
+--   --   end
+--   --   -- hs.alert(hs.window.frontmostWindow():title())
+--   -- end
+-- end
+-- -- ww = hs.uielement.watcher.new(windowWatcher)
+-- -- ww = hs.uielement.watcher --.new() --:start(events)
+-- ww = hs.uielement.newWatcher(windowWatcher)
+-- ww2 = ww:start(hs.uielement.watcher.windowCreated)
+-- hs.alert("Done")
+
 -- When screens are switched
+numScreens = #screens
 function screenWatcher()
   loadCurrentScreenSettings()
+  if #screens ~= numScreens then
+    -- Rearrange if screens changed
   processAllWindows()
+    numScreens = #screens
+  end
 end
 scrWatcher = hs.screen.watcher.new(screenWatcher)
 scrWatcher:start()
