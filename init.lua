@@ -168,20 +168,20 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
 end)
 
 -- [C]enter this window
--- function centerWindow(window)
---   hs.alert.show("Centering")
---   windowFrame = window:frame()
---   currentWidth = windowFrame.x2 - windowFrame.x1
---   currentHeight = windowFrame.y2 - windowFrame.y1
---   screenFrame = mainScreen:frame()
---   hOffset = ((screenFrame.x2 - screenFrame.x1) - currentWidth) / 2
---   vOffset = ((screenFrame.y2 - screenFrame.y1) - currentHeight) / 2
---   -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
---   window:move(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
--- end
--- hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
---   centerWindow(hs.window.frontmostWindow())
--- end)
+function centerWindow(window)
+  -- hs.alert.show("Centering")
+  windowFrame = window:frame()
+  currentWidth = windowFrame.x2 - windowFrame.x1
+  currentHeight = windowFrame.y2 - windowFrame.y1
+  screenFrame = mainScreen:frame()
+  hOffset = ((screenFrame.x2 - screenFrame.x1) - currentWidth) / 2
+  vOffset = ((screenFrame.y2 - screenFrame.y1) - currentHeight) / 2
+  -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
+  window:move(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
+  centerWindow(hs.window.frontmostWindow())
+end)
 
 
 
