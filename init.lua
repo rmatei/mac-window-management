@@ -6,102 +6,129 @@ function loadCurrentScreenSettings()
 
   screens = hs.screen.allScreens()
   if #screens == 1 then
-    mode = 'laptop'
+    mode = "laptop"
     mainScreen = screens[1]
     sideScreen = mainScreen
     buffer = 0
   else
-    -- IMPORTANT: whichever screen menubar is assigned to (from Mac display settings) is considered the big monitor. 
-    -- If your setup is reversed, then switch 1 and 2. 
+    -- IMPORTANT: whichever screen menubar is assigned to (from Mac display settings) is considered the big monitor.
+    -- If your setup is reversed, then switch 1 and 2.
     mainScreen = screens[1]
     sideScreen = screens[2]
-    mode = 'external'
+    mode = "external"
     buffer = 15
   end
 
   -- WINDOW MANAGEMENT: Actual config
-  -- Specify a frame, 
+  -- Specify a frame,
   -- a global shortcut to send current window there (optional)
   -- & any apps assigned to that frame by default
 
-  -- Even halves
-  left = {mainScreen, {x1=0, w=0.5, y1=0, h=1}}
-  right = {mainScreen, {x1=0.5, w=0.5, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
-    resizeWindow(hs.window.frontmostWindow(), left)
+  -- Halves
+  if mode == "external" then
+    leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
+    rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+      resizeWindow(hs.window.frontmostWindow(), leftBig)
+    end)
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+      resizeWindow(hs.window.frontmostWindow(), rightSmall)
+    end)
+    appSettings["Code"] = leftBig
+    appSettings["Calendar"] = rightSmall
+    appSettings["Electron"] = rightSmall
+    appSettings["Local Graph"] = rightSmall
+    appSettings["Evernote"] = rightSmall
+  else
+    left = {mainScreen, {x1=0, w=0.5, y1=0, h=1}}
+    right = {mainScreen, {x1=0.5, w=0.5, y1=0, h=1}}
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+      resizeWindow(hs.window.frontmostWindow(), left)
+    end)
+    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+      resizeWindow(hs.window.frontmostWindow(), right)
+    end)
+  end
+  -- leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
+  -- rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
+  -- hs.hotkey.bind({"cmd", "shift", "ctrl"}, "left", function()
+  --   resizeWindow(hs.window.frontmostWindow(), leftBig)
+  -- end)
+  -- hs.hotkey.bind({"cmd", "shift", "ctrl"}, "right", function()
+  --   resizeWindow(hs.window.frontmostWindow(), rightSmall)
+  -- end)
+  -- if mode == "external" then
+  --   appSettings["Code"] = leftBig
+  --   appSettings["Calendar"] = rightSmall
+  --   appSettings["Electron"] = rightSmall
+  -- end
+  
+  -- Center on main screen
+  centerBig = {mainScreen, {x1=0.25, w=0.5, y1=0, h=1}}
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "up", function()
+    resizeWindow(hs.window.frontmostWindow(), centerBig)
   end)
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
-    resizeWindow(hs.window.frontmostWindow(), right)
+
+  -- Maximize on side screen
+  side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
+  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "down", function()
+    resizeWindow(hs.window.frontmostWindow(), side)
   end)
   if mode == "external" then
-    appSettings["Code"] = left
-    appSettings["Calendar"] = right
+    appSettings["iTunes"] = side
+    appSettings["Spotify"] = side
+    appSettings["Chromium"] = side
+    appSettings["zoom.us"] = side
   end
-  
-  -- Uneven halves
-  leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
-  rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "shift", "ctrl"}, "left", function()
-    resizeWindow(hs.window.frontmostWindow(), leftBig)
-  end)
-  hs.hotkey.bind({"cmd", "shift", "ctrl"}, "right", function()
-    resizeWindow(hs.window.frontmostWindow(), rightSmall)
-  end)
 
   -- Maximize on main screen
   maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
     resizeWindow(hs.window.frontmostWindow(), maximized)
   end)
-
-  -- Maximize on side screen
-  side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "0", function()
-    resizeWindow(hs.window.frontmostWindow(), side)
-  end)
-  appSettings["iTunes"] = side
-  appSettings["Spotify"] = side
-  appSettings["Chromium"] = side
-  
-  -- Center on main screen
-  centerBig = {mainScreen, {x1=0.25, w=0.5, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
-    resizeWindow(hs.window.frontmostWindow(), centerBig)
-  end)
-
-  -- Small apps
   if mode == "laptop" then
-    centerSmall = {mainScreen, {x1=1/6, w=2/3, y1=0.0, h=1}}
+    appSettings["Google Chrome"] = maximized
+    appSettings["Code"] = maximized
+  end
+
+  -- Small / "side" apps
+  if mode == "laptop" then
+    centerSmall = {mainScreen, {x1 = 1 / 6, w = 2 / 3, y1 = 0.0, h = 1}}
   else
-    centerSmall = {mainScreen, {x1=0.3, w=0.4, y1=1/6, h=2/3}}
+    centerSmall = {mainScreen, {x1 = 0.1, w = 0.4, y1 = 1 / 6, h = 2 / 3}} -- Center in left pane
   end
   hs.hotkey.bind({"cmd", "alt", "ctrl"}, "s", function()
     resizeWindow(hs.window.frontmostWindow(), centerSmall)
   end)
-  appSettings["Preview"] = centerSmall
-  appSettings["Finder"] = centerSmall
-  appSettings["Contacts"] = centerSmall
-  appSettings["Notes"] = centerSmall
-  appSettings["Terminal"] = centerSmall
-  appSettings["Messages"] = centerSmall
-  appSettings["WhatsApp"] = centerSmall
-  appSettings["Slack"] = centerSmall
-  appSettings["Facebook Messenger"] = centerSmall
+  if mode == "external" then
+    sideLayout = rightSmall
+  else
+    sideLayout = centerSmall
+  end
+  -- appSettings["Terminal"] = sideLayout
+  -- appSettings["Preview"] = sideLayout
+  -- appSettings["Finder"] = sideLayout
+  -- appSettings["Contacts"] = sideLayout
+  -- appSettings["Notes"] = sideLayout
+  -- appSettings["Messages"] = sideLayout
+  -- appSettings["Texts"] = sideLayout
+  -- appSettings["WhatsApp"] = sideLayout
+  -- appSettings["Slack"] = sideLayout
+  -- appSettings["Messenger"] = sideLayout
+  -- appSettings["Hammerspoon"] = sideLayout
+  -- appSettings["Activity Monitor"] = sideLayout
 
   -- Default for apps not otherwise specified
+  -- Now: consider all apps other than explicitly maximized/primary ones "secondary"
   if mode == "laptop" then
-    -- Laptop: fullscreen
-    appSettings["default"] = maximized
+    appSettings["default"] = centerSmall
     hs.alert.show("Laptop mode")
   else
-    -- 2 screens: at the center of main monitor, decide where to send it
-    appSettings["default"] = centerBig
+    appSettings["default"] = rightSmall
     hs.alert.show("2-screen mode")
   end
 end
 loadCurrentScreenSettings()
-
-
 
 -- WINDOW MANAGEMENT: Methods to process this or all windows
 
@@ -111,12 +138,17 @@ function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
     -- Specify which apps are allowed to keep running in the background
-    if (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and app ~= "Code" and app ~= "Notification Center" and app ~= "Tyme 2" and app ~= "Activity Monitor") then
+    if
+      (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and app ~= "Code" and
+        app ~= "Notification Center" and
+        app ~= "Tyme 2" and
+        app ~= "Activity Monitor")
+     then
       hs.alert.show("Killing " .. app)
       window:application():kill()
     end
   end
-  -- sleep(0.5) -- When using Chrome Apps, they won't all shut down normally. 
+  -- sleep(0.5) -- When using Chrome Apps, they won't all shut down normally.
   -- hs.application.find("Chrome"):kill9()
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "q", function()
@@ -151,6 +183,7 @@ end)
 function processWindow(window)
   windowFrame = window:frame()
   currentWidth = windowFrame.x2 - windowFrame.x1
+  -- hs.alert.show("width: " .. currentWidth)
 
   -- hs.alert.show("Arranging " .. window:application():name())
   app = window:application():name()
@@ -162,7 +195,7 @@ function processWindow(window)
   if (appSettings[app]) then
     -- hs.alert.show(app .. " ->  custom frame")
     resizeWindow(window, appSettings[app])
-  elseif (currentWidth <= 800) then
+  elseif (currentWidth < 720) then -- less than half of laptop screen
     -- small windows get centered instead of resized
     -- hs.alert.show(app .. " ->  center")
     centerWindow(window)
@@ -246,7 +279,7 @@ function screenWatcher()
   loadCurrentScreenSettings()
   if #screens ~= numScreens then
     -- Rearrange if screens changed
-  processAllWindows()
+    processAllWindows()
     numScreens = #screens
   end
 end
@@ -338,6 +371,9 @@ end
 -- ADD CUSTOM SHORTCUTS TO APPS
 
 appShortcuts = {}
+appShortcuts["Code"] = {
+  {{"ctrl"}, "/", {"Run", "Start Debugging"}},
+}
 appShortcuts["Safari"] = {
   {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
   {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
