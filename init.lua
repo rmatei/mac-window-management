@@ -28,10 +28,10 @@ function loadCurrentScreenSettings()
   if mode == "external" then
     leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
     rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+    hs.hotkey.bind({"control", "option"}, "left", function()
       resizeWindow(hs.window.frontmostWindow(), leftBig)
     end)
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+    hs.hotkey.bind({"control", "option"}, "right", function()
       resizeWindow(hs.window.frontmostWindow(), rightSmall)
     end)
     appSettings["Code"] = leftBig
@@ -42,10 +42,10 @@ function loadCurrentScreenSettings()
   else
     left = {mainScreen, {x1=0, w=0.5, y1=0, h=1}}
     right = {mainScreen, {x1=0.5, w=0.5, y1=0, h=1}}
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+    hs.hotkey.bind({"control", "option"}, "left", function()
       resizeWindow(hs.window.frontmostWindow(), left)
     end)
-    hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+    hs.hotkey.bind({"control", "option"}, "right", function()
       resizeWindow(hs.window.frontmostWindow(), right)
     end)
   end
@@ -65,13 +65,13 @@ function loadCurrentScreenSettings()
   
   -- Center on main screen
   centerBig = {mainScreen, {x1=0.25, w=0.5, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "up", function()
+  hs.hotkey.bind({"control", "option"}, "up", function()
     resizeWindow(hs.window.frontmostWindow(), centerBig)
   end)
 
   -- Maximize on side screen
   side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "down", function()
+  hs.hotkey.bind({"control", "option"}, "down", function()
     resizeWindow(hs.window.frontmostWindow(), side)
   end)
   if mode == "external" then
@@ -83,7 +83,7 @@ function loadCurrentScreenSettings()
 
   -- Maximize on main screen
   maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
+  hs.hotkey.bind({"control", "option"}, "m", function()
     resizeWindow(hs.window.frontmostWindow(), maximized)
   end)
   if mode == "laptop" then
@@ -97,7 +97,7 @@ function loadCurrentScreenSettings()
   else
     centerSmall = {mainScreen, {x1 = 0.1, w = 0.4, y1 = 1 / 6, h = 2 / 3}} -- Center in left pane
   end
-  hs.hotkey.bind({"cmd", "alt", "ctrl"}, "s", function()
+  hs.hotkey.bind({"control", "option"}, "s", function()
     resizeWindow(hs.window.frontmostWindow(), centerSmall)
   end)
   if mode == "external" then
@@ -151,7 +151,7 @@ function quitAll()
   -- sleep(0.5) -- When using Chrome Apps, they won't all shut down normally.
   -- hs.application.find("Chrome"):kill9()
 end
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "q", function()
+hs.hotkey.bind({"control", "option"}, "q", function()
   quitAll()
 end)
 
@@ -164,7 +164,7 @@ function hideAllWindows()
     end
   end
 end
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "h", function() 
+hs.hotkey.bind({"control", "option"}, "h", function() 
   hideAllWindows()
 end)
 
@@ -175,7 +175,7 @@ function processAllWindows()
     processWindow(window)
   end
 end
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "a", function()
+hs.hotkey.bind({"control", "option"}, "a", function()
   processAllWindows()
 end)
 
@@ -195,7 +195,7 @@ function processWindow(window)
   if (appSettings[app]) then
     -- hs.alert.show(app .. " ->  custom frame")
     resizeWindow(window, appSettings[app])
-  elseif (currentWidth < 720) then -- less than half of laptop screen
+  elseif (currentWidth < 640) then -- less than half of laptop screen
     -- small windows get centered instead of resized
     -- hs.alert.show(app .. " ->  center")
     centerWindow(window)
@@ -204,7 +204,7 @@ function processWindow(window)
     resizeWindow(window, appSettings["default"])
   end
 end
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "t", function()
+hs.hotkey.bind({"control", "option"}, "t", function()
   processWindow(hs.window.frontmostWindow())
 end)
 
@@ -220,7 +220,7 @@ function centerWindow(window)
   -- window:setFrame(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
   window:move(hs.geometry.rect({x1 = screenFrame.x1 + hOffset, y1 = screenFrame.y1 + vOffset, x2 = screenFrame.x2 - hOffset, y2 = screenFrame.y2 - vOffset}))
 end
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
+hs.hotkey.bind({"control", "option"}, "c", function()
   centerWindow(hs.window.frontmostWindow())
 end)
 
@@ -307,51 +307,51 @@ myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConf
 -- SHORTCUTS TO QUICK OPEN APPS & WEBSITES
 
 -- Core work
-hs.hotkey.bind({"cmd", "ctrl"}, "[", function()
+hs.hotkey.bind({"control", "command"}, "[", function()
   openApp("Visual Studio Code", "Code")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "]", function()
+hs.hotkey.bind({"control", "command"}, "]", function()
   openApp("Google Chrome")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "t", function()
+hs.hotkey.bind({"control", "command"}, "t", function()
   openApp("Terminal")
 end)
--- hs.hotkey.bind({"cmd", "ctrl"}, "/", function()
+-- hs.hotkey.bind({"control", "command"}, "/", function()
 --   openApp("Chromium")
 -- end)
 
 -- Communication
-hs.hotkey.bind({"cmd", "ctrl"}, "m", function()
+hs.hotkey.bind({"control", "command"}, "m", function()
   openApp("Texts")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "f", function()
+hs.hotkey.bind({"control", "command"}, "f", function()
   openApp("Facebook Messenger")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "e", function()
+hs.hotkey.bind({"control", "command"}, "e", function()
   hs.execute("open 'https://mail.google.com'")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "w", function()
+hs.hotkey.bind({"control", "command"}, "w", function()
   openApp("WhatsApp")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "k", function()
+hs.hotkey.bind({"control", "command"}, "k", function()
   openApp("Slack")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "z", function()
+hs.hotkey.bind({"control", "command"}, "z", function()
   openApp("zoom.us")
 end)
 
 -- Other
-hs.hotkey.bind({"cmd", "ctrl"}, "c", function()
+hs.hotkey.bind({"control", "command"}, "c", function()
   -- hs.execute("open 'https://calendar.google.com'")
   openApp("Calendar")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "s", function()
+hs.hotkey.bind({"control", "command"}, "s", function()
   openApp("Spotify")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "n", function()
+hs.hotkey.bind({"control", "command"}, "n", function()
   openApp("Notes")
 end)
-hs.hotkey.bind({"cmd", "ctrl"}, "v", function()
+hs.hotkey.bind({"control", "command"}, "v", function()
   openApp("Evernote")
 end)
 
@@ -375,17 +375,17 @@ appShortcuts["Code"] = {
   {{"ctrl"}, "/", {"Run", "Start Debugging"}},
 }
 appShortcuts["Safari"] = {
-  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
-  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"control", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"control", "option"}, "right", {"Window", "Show Next Tab"}},
 }
 appShortcuts["Terminal"] = {
-  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
-  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"control", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"control", "option"}, "right", {"Window", "Show Next Tab"}},
 }
 appShortcuts["OmniFocus"] = {
   {{"command", "shift"}, "v", {"Edit", "Paste and Match Style"}},
-  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
-  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"control", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"control", "option"}, "right", {"Window", "Show Next Tab"}},
 }
 currentAppShortcuts = {}
 
