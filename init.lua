@@ -7,14 +7,20 @@ function loadCurrentScreenSettings()
   appSettings = {}
 
   screens = hs.screen.allScreens()
-  if #screens == 1 then
-    mode = "laptop"
+  screenFrame1 = screens[1]:frame()
+  screenWidth1 = (screenFrame1.x2 - screenFrame1.x1)
+  -- hs.alert(screenWidth1)
+
+  if #screens == 1 and screenWidth1 <= 1920 then
+    mode = "singleScreen"
     laptopScreen = screens[1]
     mainScreen = laptopScreen
-    buffer = 4
+    buffer = 0
+  elseif #screens == 1 then 
+    mode = "externalHorizontal"
+    buffer = 15
+    mainScreen = screens[1]
   else
-    screenFrame1 = screens[1]:frame()
-    screenWidth1 = (screenFrame1.x2 - screenFrame1.x1)
     screenFrame2 = screens[2]:frame()
     screenWidth2 = (screenFrame2.x2 - screenFrame2.x1)
 
@@ -29,80 +35,139 @@ function loadCurrentScreenSettings()
     end
 
     if sideScreenWidth <= 1080 then
-      mode = "verticalPortable"
+      mode = "externalVertical"
       buffer = 8
       laptopScreen = mainScreen
       tallScreen = sideScreen
       mainScreen = tallScreen
     else
-      mode = "external"
+      mode = "externalHorizontal"
       buffer = 15
+      laptopScreen = sideScreen
     end
   end
+
+
 
   -- WINDOW MANAGEMENT: Actual config
   -- Specify a frame,
   -- a global shortcut to send current window there (optional)
   -- & any apps assigned to that frame by default
 
-  if mode == "verticalPortable" then 
+
+
+  -- ---------------------------------------------------------------------------------------
+  if mode == "externalHorizontal" then
     if logging then
-      hs.alert.show("Vertical portable")
+      hs.alert.show("External monitor mode")
     end
 
-    -- Tall fullscreen
-    tall = {tallScreen, {x1=0, w=1, y1=0, h=1}}
-    hs.hotkey.bind({"command", "control"}, "left", function()
-      resizeWindow(hs.window.frontmostWindow(), tall)
-    end)
-    hs.hotkey.bind({"command", "control", "shift"}, "left", function()
-      centerWindow(hs.window.frontmostWindow(), tallScreen)
-    end)
-    appSettings["Code"] = tall
-    appSettings["default"] = tall
-    appSettings["Google Chrome"] = tall
+    -- MAIN SCREEN
 
-    -- Tall partial
-    -- tallSmaller = {tallScreen, {x1=0.03, w=0.94, y1=0.03, h=0.94}}
-
-    -- Tall split top/bottom
-    tallSplit = 0.6
-    tallTop = {tallScreen, {x1=0, w=1, y1=0, h=tallSplit}}
+    -- Big center + sides
+    centerWidth = 0.5
+    center = {mainScreen, {x1=(1-centerWidth)/2, w=centerWidth, y1=0, h=1}}
+    appSettings["default"] = center
     hs.hotkey.bind({"command", "control"}, "up", function()
-      resizeWindow(hs.window.frontmostWindow(), tallTop)
+      resizeWindow(hs.window.frontmostWindow(), center)
     end)
 
-    tallBottom = {tallScreen, {x1=0, w=1, y1=tallSplit, h=(1-tallSplit)}}
-    hs.hotkey.bind({"command", "control"}, "down", function()
-      resizeWindow(hs.window.frontmostWindow(), tallBottom)
+    smallLeft = {mainScreen, {x1=0, w=(1-centerWidth)/2, y1=0, h=1}}
+    smallRight = {mainScreen, {x1=(1-centerWidth)/2+centerWidth, w=(1-centerWidth)/2, y1=0, h=1}}
+    hs.hotkey.bind({"command", "control"}, "left", function()
+      resizeWindow(hs.window.frontmostWindow(), smallLeft)
     end)
-
-    -- Laptop fullscreen
-    laptop = {laptopScreen, {x1=0, w=1, y1=0, h=1}}
     hs.hotkey.bind({"command", "control"}, "right", function()
-      resizeWindow(hs.window.frontmostWindow(), laptop)
+      resizeWindow(hs.window.frontmostWindow(), smallRight)
     end)
-    hs.hotkey.bind({"command", "control", "shift"}, "right", function()
-      centerWindow(hs.window.frontmostWindow(), laptopScreen)
-    end)
-    companionApps = {"Spotify", "iTunes", "Chromium", "Activity Monitor", "Hammerspoon", "Electron", "zoom.us"}
-    for _, app in ipairs(companionApps) do
-      appSettings[app] = laptop
+
+    centerSmall = {mainScreen, {x1=0.325, w=0.35, y1=0.15, h=0.7}}
+    taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
+      "Terminal", "Finder", "Calendar", "OmniFocus"}
+    for _, app in ipairs(taskCompanionApps) do
+      appSettings[app] = centerSmall
     end
 
-    -- Laptop split left/right
-    leftSize = 0.6
-    laptopLeft = {laptopScreen, {x1=0, w=leftSize, y1=0, h=1}}
+    -- Uneven halves
+    leftSize = 1-0.65
+    left = {mainScreen, {x1=0, w=leftSize, y1=0, h=1}}
+    right = {mainScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
+    primarySide = right
+    secondarySide = left
     hs.hotkey.bind({"command", "control", "shift"}, "left", function()
-      resizeWindow(hs.window.frontmostWindow(), laptopLeft)
+      resizeWindow(hs.window.frontmostWindow(), left)
     end)
-    laptopRight = {laptopScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
     hs.hotkey.bind({"command", "control", "shift"}, "right", function()
-      resizeWindow(hs.window.frontmostWindow(), laptopRight)
+      resizeWindow(hs.window.frontmostWindow(), right)
     end)
-    appSettings["Flow: Projects - Airtable - Chromium"] = laptopLeft
-    appSettings["Balanced - Chromium"] = laptopRight
-  elseif mode == "laptop" then
+    -- appSettings["Code"] = primarySide
+    -- appSettings["Google Chrome"] = primarySide
+
+    -- Quarters
+    qx1 = 0 -- if left side secondary
+    qw = leftSize
+    -- x1 = leftSize -- if right side secondary
+    -- w = (1-leftSize)
+    topSize = 0.55
+
+    smallTop = {mainScreen, {x1=qx1, w=qw, y1=0, h=topSize}}
+    smallBottom = {mainScreen, {x1=qx1, w=qw, y1=topSize, h=(1-topSize)}}
+    hs.hotkey.bind({"command", "control", "shift"}, "up", function()
+      resizeWindow(hs.window.frontmostWindow(), smallTop)
+    end)
+    hs.hotkey.bind({"command", "control", "shift"}, "down", function()
+      resizeWindow(hs.window.frontmostWindow(), smallBottom)
+    end)
+    appSettings["Electron"] = smallBottom
+
+    -- Maximized
+    maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
+    hs.hotkey.bind({"command", "control"}, "x", function()
+      resizeWindow(hs.window.frontmostWindow(), maximized)
+    end)
+    -- hs.hotkey.bind({"option", "control", "shift"}, "up", function()
+      -- centerWindow(hs.window.frontmostWindow())
+    -- end)
+    -- appSettings["Flow: Projects - Airtable - Chromium"] = maximized
+    -- appSettings["Chromium"] = maximized
+
+    if (laptopScreen) then
+      -- LAPTOP SCREEN
+      -- Maximized
+      laptop = {laptopScreen, {x1=0, w=1, y1=0, h=1}}
+      hs.hotkey.bind({"command", "control"}, "down", function()
+        resizeWindow(hs.window.frontmostWindow(), laptop)
+      end)
+      -- hs.hotkey.bind({"command", "control", "shift"}, "down", function()
+      --   centerWindow(hs.window.frontmostWindow(), laptopScreen)
+      -- end)
+
+      -- longRunningCompanionApps = {"Spotify", "iTunes", "Chromium", "Activity Monitor", 
+      -- "Hammerspoon"}
+      --   for _, app in ipairs(longRunningCompanionApps) do
+      --   appSettings[app] = laptop
+      -- end
+
+      -- Halves
+      leftSize = 0.6 
+      laptopLeft = {laptopScreen, {x1=0, w=leftSize, y1=0, h=1}}
+      hs.hotkey.bind({"command", "control", "shift"}, "left", function()
+        resizeWindow(hs.window.frontmostWindow(), laptopLeft)
+      end)
+      laptopRight = {laptopScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
+      hs.hotkey.bind({"command", "control", "shift"}, "right", function()
+        resizeWindow(hs.window.frontmostWindow(), laptopRight)
+      end)
+      -- laptopLeftOverlapping = {laptopScreen, {x1=0, w=0.975, y1=0, h=1}}
+      -- appSettings["Flow: Projects - Airtable - Chromium"] = secondarySide
+      -- appSettings["Balanced - Chromium"] = laptopRight
+    -- else 
+      -- appSettings["Spotify"] = primarySide
+    end
+
+
+  -- ---------------------------------------------------------------------------------------
+  elseif mode == "singleScreen" then
     if logging then
       hs.alert.show("Laptop mode")
     end
@@ -112,8 +177,9 @@ function loadCurrentScreenSettings()
     hs.hotkey.bind({"command", "control"}, "up", function()
       resizeWindow(hs.window.frontmostWindow(), laptopMax)
     end)
-    appSettings["Code"] = laptopMax
-    appSettings["Google Chrome"] = laptopMax
+    -- appSettings["Code"] = laptopMax
+    -- appSettings["Google Chrome"] = laptopMax
+    appSettings["default"] = laptopMax
 
     -- Halves
     leftSize = 0.6
@@ -125,95 +191,96 @@ function loadCurrentScreenSettings()
     hs.hotkey.bind({"command", "control"}, "right", function()
       resizeWindow(hs.window.frontmostWindow(), laptopRight)
     end)
-    appSettings["Flow: Projects - Airtable - Chromium"] = laptopLeft
-    appSettings["Balanced - Chromium"] = laptopRight
+    -- laptopLeftOverlapping = {laptopScreen, {x1=0, w=0.975, y1=0, h=1}}
+    -- appSettings["Flow: Projects - Airtable - Chromium"] = laptopMax -- laptopLeftOverlapping
+    -- appSettings["Balanced - Chromium"] = laptopRight
+    -- appSettings["Texts"] = laptopLeft
+    -- appSettings["Messages"] = laptopRight
 
     -- Centered
     hs.hotkey.bind({"command", "control", "shift"}, "up", function()
       centerWindow(hs.window.frontmostWindow(), laptopScreen)
     end)
 
-    -- Smaller / middle of screen
-    addBuffer = 0.0
-    middleSize = 0.75
-    laptopMiddle = {laptopScreen, {x1=(1-middleSize)/2, w=middleSize, y1=addBuffer, h=1-2*addBuffer}}
-    hs.hotkey.bind({"command", "control"}, "down", function()
-      resizeWindow(hs.window.frontmostWindow(), laptopMiddle)
-    end)
-    appSettings["default"] = laptopMiddle
-  elseif mode == "external" then
-    if logging then
-      hs.alert.show("2-screen mode")
-    end
+  -- Smaller / middle of screen
+  -- addBuffer = 0.0
+  -- middleSize = 0.75
+  -- laptopMiddle = {laptopScreen, {x1=(1-middleSize)/2, w=middleSize, y1=addBuffer, h=1-2*addBuffer}}
+  -- hs.hotkey.bind({"command", "control"}, "down", function()
+  --   resizeWindow(hs.window.frontmostWindow(), laptopMiddle)
+  -- end)
+  -- appSettings["default"] = laptopMiddle
 
-    -- Halves
-    leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
-    rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
-    hs.hotkey.bind({"command", "control"}, "left", function()
-      resizeWindow(hs.window.frontmostWindow(), leftBig)
-    end)
-    hs.hotkey.bind({"command", "control"}, "right", function()
-      resizeWindow(hs.window.frontmostWindow(), rightSmall)
-    end)
-    appSettings["Code"] = leftBig
-    appSettings["Calendar"] = rightSmall
-    appSettings["Electron"] = rightSmall
-    appSettings["Local Graph"] = rightSmall
-    appSettings["Evernote"] = rightSmall
-    -- leftBig = {mainScreen, {x1=0, w=0.6, y1=0, h=1}}
-    -- rightSmall = {mainScreen, {x1=0.6, w=0.4, y1=0, h=1}}
-    -- hs.hotkey.bind({"cmd", "shift", "ctrl"}, "left", function()
-    --   resizeWindow(hs.window.frontmostWindow(), leftBig)
-    -- end)
-    -- hs.hotkey.bind({"cmd", "shift", "ctrl"}, "right", function()
-    --   resizeWindow(hs.window.frontmostWindow(), rightSmall)
-    -- end)
-    -- if mode == "external" then
-    --   appSettings["Code"] = leftBig
-    --   appSettings["Calendar"] = rightSmall
-    --   appSettings["Electron"] = rightSmall
-    -- end
-    
-    -- Center on main screen
-    -- centerBig = {mainScreen, {x1=0.25, w=0.5, y1=0, h=1}}
-    -- hs.hotkey.bind({"command", "control"}, "up", function()
-    --   resizeWindow(hs.window.frontmostWindow(), centerBig)
-    -- end)
 
-    -- Maximize on side screen
-    side = {sideScreen, {x1=0, w=1, y1=0, h=1}}
-    hs.hotkey.bind({"command", "control"}, "down", function()
-      resizeWindow(hs.window.frontmostWindow(), side)
-    end)
-    appSettings["iTunes"] = side
-    appSettings["Spotify"] = side
-    appSettings["Chromium"] = side
-    appSettings["zoom.us"] = side
+  -- ---------------------------------------------------------------------------------------
+  -- elseif mode == "externalVertical" then 
+  --   if logging then
+  --     hs.alert.show("Vertical portable")
+  --   end
 
-    -- Maximize on main screen
-    maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
-    hs.hotkey.bind({"command", "control"}, "up", function()
-      resizeWindow(hs.window.frontmostWindow(), maximized)
-    end)
-    hs.hotkey.bind({"command", "control", "shift"}, "up", function()
-      centerWindow(hs.window.frontmostWindow())
-    end)
-    if mode == "laptop" then
-      appSettings["Google Chrome"] = maximized
-      appSettings["Code"] = maximized
-    end
+  --   -- Tall fullscreen
+  --   tall = {tallScreen, {x1=0, w=1, y1=0, h=1}}
+  --   hs.hotkey.bind({"command", "control"}, "left", function()
+  --     resizeWindow(hs.window.frontmostWindow(), tall)
+  --   end)
+  --   hs.hotkey.bind({"command", "control", "shift"}, "left", function()
+  --     centerWindow(hs.window.frontmostWindow(), tallScreen)
+  --   end)
+  --   appSettings["Code"] = tall
+  --   appSettings["default"] = tall
+  --   appSettings["Google Chrome"] = tall
 
-    -- Default for apps not otherwise specified
-    -- Now: consider all apps other than explicitly maximized/primary ones "secondary"
-    appSettings["default"] = rightSmall
+  --   -- Tall partial
+  --   -- tallSmaller = {tallScreen, {x1=0.03, w=0.94, y1=0.03, h=0.94}}
+
+  --   -- Tall split top/bottom
+  --   tallSplit = 0.6
+  --   tallTop = {tallScreen, {x1=0, w=1, y1=0, h=tallSplit}}
+  --   hs.hotkey.bind({"command", "control"}, "up", function()
+  --     resizeWindow(hs.window.frontmostWindow(), tallTop)
+  --   end)
+
+  --   tallBottom = {tallScreen, {x1=0, w=1, y1=tallSplit, h=(1-tallSplit)}}
+  --   hs.hotkey.bind({"command", "control"}, "down", function()
+  --     resizeWindow(hs.window.frontmostWindow(), tallBottom)
+  --   end)
+
+  --   -- Laptop fullscreen
+  --   laptop = {laptopScreen, {x1=0, w=1, y1=0, h=1}}
+  --   hs.hotkey.bind({"command", "control"}, "right", function()
+  --     resizeWindow(hs.window.frontmostWindow(), laptop)
+  --   end)
+  --   hs.hotkey.bind({"command", "control", "shift"}, "right", function()
+  --     centerWindow(hs.window.frontmostWindow(), laptopScreen)
+  --   end)
+  --   companionApps = {"Spotify", "iTunes", "Chromium", "Activity Monitor", 
+  --     "Hammerspoon", "Electron", "Local Graph", "zoom.us", "Photos", "Notes", "Contacts",
+  --     "Terminal", "Finder", "Calendar"}
+  --   for _, app in ipairs(companionApps) do
+  --     appSettings[app] = laptop
+  --   end
+
+  --   -- Laptop split left/right
+  --   leftSize = 0.6
+  --   laptopLeft = {laptopScreen, {x1=0, w=leftSize, y1=0, h=1}}
+  --   hs.hotkey.bind({"command", "control", "shift"}, "left", function()
+  --     resizeWindow(hs.window.frontmostWindow(), laptopLeft)
+  --   end)
+  --   laptopRight = {laptopScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
+  --   hs.hotkey.bind({"command", "control", "shift"}, "right", function()
+  --     resizeWindow(hs.window.frontmostWindow(), laptopRight)
+  --   end)
+  --   laptopLeftOverlapping = {laptopScreen, {x1=0, w=0.975, y1=0, h=1}}
+  --   appSettings["Flow: Projects - Airtable - Chromium"] = laptopLeftOverlapping
+  --   appSettings["Balanced - Chromium"] = laptopRight
   end
 
   -- For all layouts, these apps would normally be centered because they start out 
   -- with a small frame. Re-cast them to the default size.
-  smallSpawningApps = {"Terminal", "Finder"}
-  for _, app in ipairs(smallSpawningApps) do
-    appSettings[app] = appSettings["default"]
-  end
+  -- smallSpawningApps = {"Terminal", "Finder"}
+  -- for _, app in ipairs(smallSpawningApps) do
+    -- appSettings[app] = appSettings["default"]
+  -- end
 end
 loadCurrentScreenSettings()
 
@@ -221,22 +288,33 @@ loadCurrentScreenSettings()
 
 -- [Q]uit all apps with open windows, e.g. when starting a focus period
 -- or freeing up memory
+-- Specify which apps are allowed to keep running in the background
+leaveRunningApps = {
+  ["Electron"] = true,
+  ["Chromium"] = true,
+  ["Hammerspoon"] = true,
+  ["Tyme 2"] = true,
+  ["Spotify"] = true,
+  ["Activity Monitor"] = true,
+  -- ["Texts"] = true,
+  -- ["Messages"] = true,
+  ["Notification Center"] = true,
+  ["Code"] = true,
+}
+leaveVisibleApps = {
+  -- ["Chromium"] = true,
+}
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
-    -- Specify which apps are allowed to keep running in the background
-    if
-      (app ~= "Electron" and app ~= "Chromium" and app ~= "Hammerspoon" and app ~= "Spotify" and
-        app ~= "Notification Center" and
-        app ~= "Tyme 2" and
-        app ~= "Activity Monitor")
-     then
+    if leaveRunningApps[app] ~= true then
       hs.alert.show("Killing " .. app)
       window:application():kill()
     end
   end
   -- sleep(0.5) -- When using Chrome Apps, they won't all shut down normally.
   -- hs.application.find("Chrome"):kill9()
+  hideAllWindows()
 end
 hs.hotkey.bind({"control"}, "delete", function()
   quitAll()
@@ -247,7 +325,7 @@ end)
 function hideAllWindows()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
-    if (app ~= "OmniFocus" and app ~= "Terminal") then
+    if leaveVisibleApps[app] ~= true then
       window:application():hide()
     end
   end
@@ -265,7 +343,7 @@ function processAllWindows()
     processWindow(window)
   end
 end
-hs.hotkey.bind({"command", "control", "shift"}, "a", function()
+hs.hotkey.bind({"command", "control"}, "a", function()
   processAllWindows()
 end)
 
@@ -273,6 +351,7 @@ end)
 function processWindow(window)
   windowFrame = window:frame()
   currentWidth = windowFrame.x2 - windowFrame.x1
+  currentHeight = windowFrame.y2 - windowFrame.y1
   -- hs.alert.show("width: " .. currentWidth)
 
   app = window:application():name()
@@ -290,7 +369,7 @@ function processWindow(window)
       hs.alert.show(app .. " ->  custom frame")
     end
     resizeWindow(window, appSettings[app])
-  elseif (currentWidth < 720) then -- less than half of laptop screen
+  elseif (currentWidth < 800 and currentHeight < 800) then -- less than half of laptop screen
     -- small windows get centered instead of resized
     if logging then
       hs.alert.show(app .. " ->  center - b/c width " .. currentWidth)
@@ -303,7 +382,7 @@ function processWindow(window)
     resizeWindow(window, appSettings["default"])
   end
 end
-hs.hotkey.bind({"command", "control"}, "a", function()
+hs.hotkey.bind({"command", "control", "shift"}, "a", function()
   processWindow(hs.window.frontmostWindow())
 end)
 
@@ -350,15 +429,15 @@ function applicationWatcher(appName, eventType, appObject)
     end
   end
   -- For some apps that don't launch, process on activation
-  if (eventType == hs.application.watcher.activated) then
-    if (appObject:name() == "Finder" or string.find(hs.window.frontmostWindow():title(), "New Tab")) then
-      if logging then
-        hs.alert("Processing front-most window (not launch)")
-      end
-      processWindow(hs.window.frontmostWindow())
-    end
-    -- hs.alert(hs.window.frontmostWindow():title())
-  end
+  -- if (eventType == hs.application.watcher.activated) then
+  --   if (appObject:name() == "Finder" or string.find(hs.window.frontmostWindow():title(), "New Tab")) then
+  --     if logging then
+  --       hs.alert("Processing front-most window (not launch)")
+  --     end
+  --     processWindow(hs.window.frontmostWindow())
+  --   end
+  --   -- hs.alert(hs.window.frontmostWindow():title())
+  -- end
 end
 appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
@@ -415,11 +494,15 @@ myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConf
 hs.hotkey.bind({"control", "command"}, "[", function()
   openApp("Visual Studio Code", "Code")
 end)
-hs.hotkey.bind({"control", "command"}, "]", function()
+-- Doing this through shortcuts IN specific Electron apps
+-- hs.hotkey.bind({"control", "command"}, "]", function()
+  -- openApp("Electron")
+  -- hs.osascript.applescript('tell application "Electron" \
+    -- activate \
+  -- end tell')
+-- end)
+hs.hotkey.bind({"control", "command"}, "\\", function()
   openApp("Google Chrome")
-end)
-hs.hotkey.bind({"control", "command"}, "t", function()
-  openApp("Terminal")
 end)
 hs.hotkey.bind({"control", "command"}, "'", function()
   -- openApp("Chromium")
@@ -434,6 +517,14 @@ end)
 -- Communication
 hs.hotkey.bind({"control", "command"}, "m", function()
   openApp("Texts")
+  if(not (hs.application.find("Messages") and hs.application.find("Messages"):isRunning())) then
+    openApp("Messages")
+    -- sleep(4)
+  end
+  -- if(not hs.application.find("Messages"):isHidden()) then
+    -- hs.application.find("Messages"):hide()
+  -- end
+  hs.application.find("Texts"):activate()
 end)
 hs.hotkey.bind({"control", "command", "shift"}, "m", function()
   openApp("Messages")
@@ -455,7 +546,7 @@ hs.hotkey.bind({"control", "command"}, "z", function()
 end)
 
 -- Other
-hs.hotkey.bind({"control", "command"}, "c", function()
+hs.hotkey.bind({"control", "command"}, "l", function()
   openApp("Calendar")
 end)
 hs.hotkey.bind({"control", "command", "shift"}, "c", function()
@@ -470,13 +561,19 @@ end)
 hs.hotkey.bind({"control", "command"}, "v", function()
   openApp("Evernote")
 end)
+hs.hotkey.bind({"control", "command"}, "t", function()
+  openApp("Terminal")
+end)
+hs.hotkey.bind({"control", "command"}, "p", function()
+  openApp("Photos")
+end)
 
 -- Focus an app, or if already focused, then toggle between tabs.
 function openApp(name, windowName)
   -- Sometimes the window "app name" is not the same as name needed to open app, then pass it as windowName. Use this to check if they differ.
   -- hs.alert(name .. ',' .. hs.window.frontmostWindow():application():name())
   windowName = windowName or name
-  if(hs.window.frontmostWindow():application():name() == windowName) then
+  if(hs.window.frontmostWindow() and hs.window.frontmostWindow():application():name() == windowName) then
     hs.eventtap.keyStroke({"cmd", "option"}, "right")
   else
     hs.application.open(name)
