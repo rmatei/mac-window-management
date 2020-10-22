@@ -81,12 +81,23 @@ function loadCurrentScreenSettings()
       resizeWindow(hs.window.frontmostWindow(), smallRight)
     end)
 
-    centerSmall = {mainScreen, {x1=0.325, w=0.35, y1=0.15, h=0.7}}
     taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
-      "Terminal", "Finder", "Calendar", "OmniFocus"}
+      "Terminal", "Finder", "Calendar", "Google Calendar", "OmniFocus", "Flow: Projects - Airtable - Chromium"}
     for _, app in ipairs(taskCompanionApps) do
-      appSettings[app] = centerSmall
+      appSettings[app] = smallLeft
     end
+
+    commsApps = {"Texts", "Messages", "Slack"}
+    for _, app in ipairs(commsApps) do
+      appSettings[app] = smallRight
+    end
+
+    -- centerSmall = {mainScreen, {x1=0.325, w=0.35, y1=0.15, h=0.7}}
+    -- taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
+    --   "Terminal", "Finder", "Calendar", "OmniFocus"}
+    -- for _, app in ipairs(taskCompanionApps) do
+    --   appSettings[app] = centerSmall
+    -- end
 
     -- Uneven halves
     leftSize = 1-0.65
@@ -296,10 +307,12 @@ leaveRunningApps = {
   ["Tyme 2"] = true,
   ["Spotify"] = true,
   ["Activity Monitor"] = true,
-  -- ["Texts"] = true,
-  -- ["Messages"] = true,
+  ["Slack"] = true,
+  ["Texts"] = true,
+  ["Messages"] = true,
   ["Notification Center"] = true,
   ["Code"] = true,
+  ["Brave Browser"] = true, -- for music & others
 }
 leaveVisibleApps = {
   -- ["Chromium"] = true,
@@ -307,6 +320,7 @@ leaveVisibleApps = {
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
     app = window:application():name()
+    -- hs.alert.show("Killing " .. app)
     if leaveRunningApps[app] ~= true then
       hs.alert.show("Killing " .. app)
       window:application():kill()
@@ -355,9 +369,9 @@ function processWindow(window)
   -- hs.alert.show("width: " .. currentWidth)
 
   app = window:application():name()
-  -- if logging then
-    -- hs.alert.show("Arranging " .. window:application():name() .. " - w/ title -> " .. window:title())
-  -- end
+  if logging then
+    hs.alert.show("Arranging " .. window:application():name() .. " - w/ title -> " .. window:title())
+  end
   if (appSettings[window:title()] ~= nil) then
     -- Try lookup by window title first - allows for more specific customization & makes Chrome Apps able to have separate settings than Chrome
     if logging then
@@ -504,6 +518,9 @@ end)
 hs.hotkey.bind({"control", "command"}, "\\", function()
   openApp("Google Chrome")
 end)
+hs.hotkey.bind({"control", "command"}, "b", function()
+  openApp("Brave Browser")
+end)
 hs.hotkey.bind({"control", "command"}, "'", function()
   -- openApp("Chromium")
   hs.osascript.applescript('tell application "Chromium" \
@@ -529,9 +546,9 @@ end)
 hs.hotkey.bind({"control", "command", "shift"}, "m", function()
   openApp("Messages")
 end)
-hs.hotkey.bind({"control", "command"}, "b", function()
-  openApp("Facebook Messenger")
-end)
+-- hs.hotkey.bind({"control", "command"}, "b", function()
+--   openApp("Facebook Messenger")
+-- end)
 hs.hotkey.bind({"control", "command"}, "e", function()
   hs.execute("open 'https://mail.google.com'")
 end)
@@ -549,7 +566,7 @@ end)
 hs.hotkey.bind({"control", "command"}, "l", function()
   openApp("Calendar")
 end)
-hs.hotkey.bind({"control", "command", "shift"}, "c", function()
+hs.hotkey.bind({"control", "command", "shift"}, "l", function()
   hs.execute("open 'https://calendar.google.com'")
 end)
 hs.hotkey.bind({"control", "command"}, "s", function()
