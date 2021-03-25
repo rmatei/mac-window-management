@@ -17,9 +17,11 @@ function loadCurrentScreenSettings()
     mainScreen = laptopScreen
     buffer = 0
   elseif #screens == 1 then 
+  -- else
     mode = "externalHorizontal"
     buffer = 15
     mainScreen = screens[1]
+  -- end
   else
     screenFrame2 = screens[2]:frame()
     screenWidth2 = (screenFrame2.x2 - screenFrame2.x1)
@@ -45,6 +47,9 @@ function loadCurrentScreenSettings()
       buffer = 15
       laptopScreen = sideScreen
     end
+  end
+  if logging then 
+    hs.alert(mode)
   end
 
 
@@ -81,16 +86,28 @@ function loadCurrentScreenSettings()
       resizeWindow(hs.window.frontmostWindow(), smallRight)
     end)
 
+    appSettings["Flow: Projects - Airtable - Chromium"] = smallLeft
+
     taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
-      "Terminal", "Finder", "Calendar", "Google Calendar", "OmniFocus", "Flow: Projects - Airtable - Chromium"}
+      "Terminal", "Finder", "Calendar", "Google Calendar", "OmniFocus"}
     for _, app in ipairs(taskCompanionApps) do
-      appSettings[app] = smallLeft
+      appSettings[app] = smallRight
     end
 
-    commsApps = {"Texts", "Messages", "Slack"}
+    commsApps = {"Texts", "Beeper", "Messages", "Slack", "Activity Monitor"}
     for _, app in ipairs(commsApps) do
       appSettings[app] = smallRight
     end
+
+    bigWidth = 1-(1-centerWidth)/2
+    bigLeft = {mainScreen, {x1=0, w=bigWidth, y1=0, h=1}}
+    bigRight = {mainScreen, {x1=1-bigWidth, w=bigWidth, y1=0, h=1}}
+    hs.hotkey.bind({"command", "control", "shift"}, "left", function()
+      resizeWindow(hs.window.frontmostWindow(), bigLeft)
+    end)
+    hs.hotkey.bind({"command", "control", "shift"}, "right", function()
+      resizeWindow(hs.window.frontmostWindow(), bigRight)
+    end)
 
     -- centerSmall = {mainScreen, {x1=0.325, w=0.35, y1=0.15, h=0.7}}
     -- taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
@@ -105,10 +122,10 @@ function loadCurrentScreenSettings()
     right = {mainScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
     primarySide = right
     secondarySide = left
-    hs.hotkey.bind({"command", "control", "shift"}, "left", function()
+    hs.hotkey.bind({"command", "control", "option"}, "left", function()
       resizeWindow(hs.window.frontmostWindow(), left)
     end)
-    hs.hotkey.bind({"command", "control", "shift"}, "right", function()
+    hs.hotkey.bind({"command", "control", "option"}, "right", function()
       resizeWindow(hs.window.frontmostWindow(), right)
     end)
     -- appSettings["Code"] = primarySide
@@ -160,15 +177,15 @@ function loadCurrentScreenSettings()
       -- end
 
       -- Halves
-      leftSize = 0.6 
-      laptopLeft = {laptopScreen, {x1=0, w=leftSize, y1=0, h=1}}
-      hs.hotkey.bind({"command", "control", "shift"}, "left", function()
-        resizeWindow(hs.window.frontmostWindow(), laptopLeft)
-      end)
-      laptopRight = {laptopScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
-      hs.hotkey.bind({"command", "control", "shift"}, "right", function()
-        resizeWindow(hs.window.frontmostWindow(), laptopRight)
-      end)
+      -- leftSize = 0.6 
+      -- laptopLeft = {laptopScreen, {x1=0, w=leftSize, y1=0, h=1}}
+      -- hs.hotkey.bind({"command", "control", "shift"}, "left", function()
+      --   resizeWindow(hs.window.frontmostWindow(), laptopLeft)
+      -- end)
+      -- laptopRight = {laptopScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
+      -- hs.hotkey.bind({"command", "control", "shift"}, "right", function()
+      --   resizeWindow(hs.window.frontmostWindow(), laptopRight)
+      -- end)
       -- laptopLeftOverlapping = {laptopScreen, {x1=0, w=0.975, y1=0, h=1}}
       -- appSettings["Flow: Projects - Airtable - Chromium"] = secondarySide
       -- appSettings["Balanced - Chromium"] = laptopRight
@@ -307,15 +324,21 @@ leaveRunningApps = {
   ["Tyme 2"] = true,
   ["Spotify"] = true,
   ["Activity Monitor"] = true,
-  ["Slack"] = true,
-  ["Texts"] = true,
-  ["Messages"] = true,
-  ["Notification Center"] = true,
+  ["Transmission"] = true,
+  ["Terminal"] = true,
+  ["Google Chrome"] = true,
+  -- ["Photos"] = true,
+  -- ["Slack"] = true,
+  -- ["Texts"] = true,
+  -- ["Beeper"] = true,
+  -- ["Messages"] = true,
+  -- ["Notification Center"] = true,
+  -- ["OmniFocus"] = true,
   ["Code"] = true,
   ["Brave Browser"] = true, -- for music & others
 }
 leaveVisibleApps = {
-  -- ["Chromium"] = true,
+  ["Chromium"] = true,
 }
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
@@ -516,7 +539,12 @@ end)
   -- end tell')
 -- end)
 hs.hotkey.bind({"control", "command"}, "\\", function()
+  -- openApp("Google Chrome")
+  openApp("Safari")
+end)
+hs.hotkey.bind({"control", "command", "shift"}, "\\", function()
   openApp("Google Chrome")
+  -- openApp("Safari")
 end)
 hs.hotkey.bind({"control", "command"}, "b", function()
   openApp("Brave Browser")
@@ -533,6 +561,7 @@ end)
 
 -- Communication
 hs.hotkey.bind({"control", "command"}, "m", function()
+  -- openApp("Messages")
   openApp("Texts")
   if(not (hs.application.find("Messages") and hs.application.find("Messages"):isRunning())) then
     openApp("Messages")
@@ -542,6 +571,9 @@ hs.hotkey.bind({"control", "command"}, "m", function()
     -- hs.application.find("Messages"):hide()
   -- end
   hs.application.find("Texts"):activate()
+end)
+hs.hotkey.bind({"control", "command"}, "b", function()
+  openApp("Beeper")
 end)
 hs.hotkey.bind({"control", "command", "shift"}, "m", function()
   openApp("Messages")
@@ -585,6 +617,57 @@ hs.hotkey.bind({"control", "command"}, "p", function()
   openApp("Photos")
 end)
 
+-- bulk messenger: send and advance
+hs.hotkey.bind({"control", "option"}, "return", function()
+  -- openApp("Chromium")
+  hs.osascript.applescript('tell application "System Events" \
+  key code 36 \
+  delay 0.5 \
+  key code 48 using command down \
+  delay 0.5 \
+	key code 36 \
+end tell')
+end)
+
+-- bulk messenger: skip and advance
+hs.hotkey.bind({"control", "option"}, "/", function()
+  hs.osascript.applescript('tell application "System Events" \
+  keystroke "a" using command down \
+  delay 0.5 \
+  key code 51 \
+  delay 0.5 \
+  key code 48 using command down \
+  delay 0.5 \
+	key code 36 \
+end tell')
+end)
+
+hs.hotkey.bind({"control"}, "'", function()
+  hs.osascript.applescript('tell application "Terminal" \
+  activate \
+end tell \
+tell application "System Events" \
+  delay 0.5 \
+	key code 36 \
+end tell')
+end)
+
+-- hs.hotkey.bind({"control"}, "[", function()
+--   hs.osascript.applescript('tell application "OmniFocus" \
+-- 	activate \
+-- end tell \
+-- delay 1 \
+-- set s to the clipboard as text \
+-- display notification "" with title s subtitle "" sound name "Frog"')
+--   hideAllWindows()
+-- end)
+
+-- hs.hotkey.bind({"control"}, "]", function()
+--   hs.osascript.applescript('tell application "OmniFocus" \
+-- 	activate \
+-- end tell')
+-- end)
+
 -- Focus an app, or if already focused, then toggle between tabs.
 function openApp(name, windowName)
   -- Sometimes the window "app name" is not the same as name needed to open app, then pass it as windowName. Use this to check if they differ.
@@ -605,17 +688,22 @@ appShortcuts["Code"] = {
   {{"ctrl"}, "/", {"Run", "Start Debugging"}},
 }
 appShortcuts["Safari"] = {
-  {{"control", "option"}, "left", {"Window", "Show Previous Tab"}},
-  {{"control", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+  -- {{"command", "shift"}, "v", {"Edit", "Paste and Match Style"}},
 }
 appShortcuts["Terminal"] = {
-  {{"control", "option"}, "left", {"Window", "Show Previous Tab"}},
-  {{"control", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
 }
 appShortcuts["OmniFocus"] = {
   {{"command", "shift"}, "v", {"Edit", "Paste and Match Style"}},
-  {{"control", "option"}, "left", {"Window", "Show Previous Tab"}},
-  {{"control", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
+  {{"command", "option"}, "right", {"Window", "Show Next Tab"}},
+  {{"control", "option"}, "up", {"Organize", "Move", "Move Up"}},
+  {{"control", "option"}, "down", {"Organize", "Move", "Move Down"}},
+  {{"control", "option"}, "left", {"Organize", "Move", "Move Left"}},
+  {{"control", "option"}, "right", {"Organize", "Move", "Move Right"}}
 }
 currentAppShortcuts = {}
 
