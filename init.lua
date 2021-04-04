@@ -86,10 +86,8 @@ function loadCurrentScreenSettings()
       resizeWindow(hs.window.frontmostWindow(), smallRight)
     end)
 
-    appSettings["Flow: Projects - Airtable - Chromium"] = smallLeft
-
     taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
-      "Terminal", "Finder", "Calendar", "Google Calendar", "OmniFocus"}
+      "Terminal", "Finder", "Calendar", "Google Calendar", "OmniFocus", "1Password", "Electron"}
     for _, app in ipairs(taskCompanionApps) do
       appSettings[app] = smallRight
     end
@@ -108,6 +106,11 @@ function loadCurrentScreenSettings()
     hs.hotkey.bind({"command", "control", "shift"}, "right", function()
       resizeWindow(hs.window.frontmostWindow(), bigRight)
     end)
+    appSettings["Chromium"] = bigLeft
+    appSettings["Code"] = bigLeft
+
+    appSettings["Google Chrome"] = bigLeft
+    appSettings["New task"] = smallRight
 
     -- centerSmall = {mainScreen, {x1=0.325, w=0.35, y1=0.15, h=0.7}}
     -- taskCompanionApps = {"zoom.us", "Photos", "Notes", "Contacts",
@@ -117,7 +120,7 @@ function loadCurrentScreenSettings()
     -- end
 
     -- Uneven halves
-    leftSize = 1-0.65
+    leftSize = 0.65
     left = {mainScreen, {x1=0, w=leftSize, y1=0, h=1}}
     right = {mainScreen, {x1=leftSize, w=(1-leftSize), y1=0, h=1}}
     primarySide = right
@@ -146,7 +149,7 @@ function loadCurrentScreenSettings()
     hs.hotkey.bind({"command", "control", "shift"}, "down", function()
       resizeWindow(hs.window.frontmostWindow(), smallBottom)
     end)
-    appSettings["Electron"] = smallBottom
+    -- appSettings["Electron"] = smallBottom
 
     -- Maximized
     maximized = {mainScreen, {x1=0, w=1, y1=0, h=1}}
@@ -326,19 +329,20 @@ leaveRunningApps = {
   ["Activity Monitor"] = true,
   ["Transmission"] = true,
   ["Terminal"] = true,
-  ["Google Chrome"] = true,
+  -- ["Google Chrome"] = true,
   -- ["Photos"] = true,
   -- ["Slack"] = true,
-  -- ["Texts"] = true,
+  ["Texts"] = true,
   -- ["Beeper"] = true,
-  -- ["Messages"] = true,
+  ["Messages"] = true,
   -- ["Notification Center"] = true,
   -- ["OmniFocus"] = true,
   ["Code"] = true,
   ["Brave Browser"] = true, -- for music & others
 }
 leaveVisibleApps = {
-  ["Chromium"] = true,
+  -- ["Chromium"] = true,
+  ["Terminal"] = true,
 }
 function quitAll()
   for i, window in pairs(hs.window.allWindows()) do
@@ -532,12 +536,12 @@ hs.hotkey.bind({"control", "command"}, "[", function()
   openApp("Visual Studio Code", "Code")
 end)
 -- Doing this through shortcuts IN specific Electron apps
--- hs.hotkey.bind({"control", "command"}, "]", function()
-  -- openApp("Electron")
+hs.hotkey.bind({"control", "command"}, "]", function()
+  openApp("Electron")
   -- hs.osascript.applescript('tell application "Electron" \
     -- activate \
   -- end tell')
--- end)
+end)
 hs.hotkey.bind({"control", "command"}, "\\", function()
   -- openApp("Google Chrome")
   openApp("Safari")
@@ -551,10 +555,15 @@ hs.hotkey.bind({"control", "command"}, "b", function()
 end)
 hs.hotkey.bind({"control", "command"}, "'", function()
   -- openApp("Chromium")
-  hs.osascript.applescript('tell application "Chromium" \
-    activate \
-  end tell')
+  -- hs.osascript.applescript('tell application "Chromium" \
+    -- activate \
+  -- end tell')
+  -- hs.execute("open 'https://airtable.com/tbl5NSKDgMWTgpPzh?blocks=hide'")
+  openApp("Google Chrome")
 end)
+-- hs.hotkey.bind({"control", "command"}, "'", function()
+--   hs.execute("open 'https://airtable.com/tbl5NSKDgMWTgpPzh/viwQ39cW1DM6vuqgq?blocks=hide'")
+-- end)
 hs.hotkey.bind({"control", "command"}, "o", function()
   openApp("OmniFocus")
 end)
@@ -685,7 +694,7 @@ end
 
 appShortcuts = {}
 appShortcuts["Code"] = {
-  {{"ctrl"}, "/", {"Run", "Start Debugging"}},
+  {{"ctrl"}, "\\", {"Run", "Start Debugging"}},
 }
 appShortcuts["Safari"] = {
   {{"command", "option"}, "left", {"Window", "Show Previous Tab"}},
